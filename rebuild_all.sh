@@ -16,4 +16,6 @@ for c in $CONFIGS; do
     cmake --build $ROOT/build --config $c
 done
 
+ls -la bin/*/*
+
 set +x

@@ -1,12 +1,22 @@
-add_executable(tracer main.cpp) # The main executable
-add_library(tracer-lib hello.cpp) # A library for tests
+# The main executable
+add_executable(${EXECUTABLE_NAME} main.cpp) 
 
-SET_TARGET_PROPERTIES(tracer-lib PROPERTIES PREFIX "") # Remove the lib prefix
+# Add source files
+file(GLOB_RECURSE SOURCE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 
-target_link_libraries(tracer tracer-lib) # Link our sources to the executable
+list(REMOVE_ITEM ${SOURCE_FILES} main.cpp)
 
-install(TARGETS tracer DESTINATION bin)
-install(TARGETS tracer-lib
+# A library for tests
+add_library(${LIB_NAME} ${SOURCE_FILES})
+
+# Remove the lib prefix
+set_target_properties(${LIB_NAME} PROPERTIES PREFIX "")
+
+# Link our sources to the executable
+target_link_libraries(${EXECUTABLE_NAME} ${LIB_NAME} )
+
+install(TARGETS ${EXECUTABLE_NAME} DESTINATION bin)
+install(TARGETS ${LIB_NAME} 
     ARCHIVE DESTINATION lib
     LIBRARY DESTINATION lib
     RUNTIME DESTINATION bin

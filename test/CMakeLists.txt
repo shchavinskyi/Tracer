@@ -1,11 +1,13 @@
-set(TEST_SOURCES hello_test.cpp)
 
-add_executable(test_runner test_runner.cpp ${TEST_SOURCES})
+# Add source files
+file(GLOB_RECURSE TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/*_test.cpp)
 
-target_link_libraries(test_runner tracer-lib)
+set(TEST_EXECUTABLE_NAME test_runner${CMAKE_DEBUG_POSTFIX})
 
-set(DOCTEST_INCLUDE_DIR ../${EXTERNAL_LIBS_DIR}/doctest CACHE INTERNAL "Path to include folder for doctest")
+add_executable(${TEST_EXECUTABLE_NAME} test_runner.cpp ${TEST_SOURCES})
 
-message("DOCTEST_INCLUDE_DIR ${DOCTEST_INCLUDE_DIR}")
+target_link_libraries(${TEST_EXECUTABLE_NAME} ${LIB_NAME})
 
-target_include_directories(test_runner PUBLIC ${DOCTEST_INCLUDE_DIR})
+set(DOCTEST_INCLUDE_DIR ${EXTERNAL_LIBS_DIR}/doctest CACHE INTERNAL "Path to include folder for doctest")
+
+target_include_directories(${TEST_EXECUTABLE_NAME} PUBLIC ${DOCTEST_INCLUDE_DIR})
