@@ -32,6 +32,7 @@ set(LIB_NAME tracer-lib${CMAKE_DEBUG_POSTFIX})
 set(EXTERNAL_LIBS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external)
 
 include_directories(include)
+include_directories(${EXTERNAL_LIBS_DIR}/stb) 
 include_directories(${EXTERNAL_LIBS_DIR}/glm) 
 
 add_subdirectory(src)
