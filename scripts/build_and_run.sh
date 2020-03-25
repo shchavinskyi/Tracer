@@ -1,8 +1,6 @@
 #!/bin/sh
 
-SCRIPT_DIR=$(dirname $0)
-
-ROOT=$(cd ../$SCRIPT_DIR; pwd)
+ROOT=$(cd $(dirname $0); cd ..; pwd)
 
 CONFIG="Debug"
 
