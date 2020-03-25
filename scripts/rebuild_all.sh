@@ -1,8 +1,12 @@
 #!/bin/sh
 
-rm -rf build bin lib
+SCRIPT_DIR=$(dirname $0)
 
-ROOT=$(cd $(dirname $0); pwd)
+# call clean script
+source "$SCRIPT_DIR/clean.sh"
+
+ROOT=$(cd ../$SCRIPT_DIR; pwd)
+
 CONFIGS="Debug Release"
 
 set -ex
