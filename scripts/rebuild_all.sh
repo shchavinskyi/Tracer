@@ -2,10 +2,14 @@
 
 SCRIPT_DIR=$(dirname $0)
 
-# call clean script
-source "$SCRIPT_DIR/clean.sh"
+ROOT=$(cd $(dirname $0); cd ..; pwd)
 
-ROOT=$(cd ../$SCRIPT_DIR; pwd)
+# clean folders if they are exist
+rm -rf "${ROOT}/build" "${ROOT}/bin" "${ROOT}/lib"
+
+mkdir "${ROOT}/build"
+mkdir "${ROOT}/bin"
+mkdir "${ROOT}/lib"
 
 CONFIGS="Debug Release"
 
@@ -16,8 +20,8 @@ if [ $# -eq 1 ]; then
 fi
 
 for c in $CONFIGS; do
-    cmake -H$ROOT -B$ROOT/build -DBUILD_TESTS=ON -DCMAKE_BUILD_TYPE=$c
-    cmake --build $ROOT/build --config $c
+    cmake -S "$ROOT" -B "$ROOT/build" -DBUILD_TESTS=ON -DCMAKE_BUILD_TYPE=$c
+    cmake --build "$ROOT/build" --config $c
 done
 
 ls -la bin/*/*
