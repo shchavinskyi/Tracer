@@ -6,7 +6,7 @@ CONFIG="Debug"
 
 set -ex
 
-cmake --build $ROOT/build --config ${CONFIG}
+cmake --build "$ROOT/build" --config ${CONFIG}
 
 bin/${CONFIG}/tracer.exe
 

@@ -1,33 +1,14 @@
 #include <iostream>
 #include <string>
-
+#include <vector>
 #include <limits>
 
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 #include <glm/gtx/intersect.hpp>
 
-
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include <stb_image_write.h>
-
-
-#include "hello.h"
-
-struct Color
-{
-	float r;
-	float g;
-	float b;
-};
-
-struct Texel
-{
-	uint8_t r;
-	uint8_t g;
-	uint8_t b;
-	static constexpr uint8_t MAX_VALUE = std::numeric_limits<uint8_t>::max();
-};
+#include "scene.h"
+#include "save.h"
 
 struct Ray
 {
@@ -35,79 +16,85 @@ struct Ray
 	glm::vec3 direction;
 };
 
+struct HitResult
+{
+	glm::vec3 position;
+   	glm::vec3 normal;
+};
 
-
-const int imageComp = 3; // RGB
+glm::vec3 backgroundColor(const Ray& ray)
+{
+    float t = 0.5f * (ray.direction.y + 1.0f);
+    const glm::vec3 top{0.5f, 0.7f, 1.0f};
+    const glm::vec3 bottom(1.0f, 1.0f, 1.0f);
+    return (1.0f - t) * top + t * bottom;
+}
 
 int main(int /*argc*/, char** /*argv*/)
 {
 	glm::ivec2 imageSize{800, 400};
 
-
-
-	Color* imageBuffer = static_cast<Color*>(malloc(sizeof(Color) * imageSize.x * imageSize.y));
+	glm::vec3* imageBuffer = static_cast<glm::vec3*>(malloc(sizeof(glm::vec3) * imageSize.x * imageSize.y));
 	
 	for (int y = 0 ; y < imageSize.y; ++y)
 	for (int x = 0 ; x < imageSize.x; ++x)
 	{
-		Color& currentPixel = imageBuffer[x + y * imageSize.x];
+		glm::vec3& currentPixel = imageBuffer[x + y * imageSize.x];
 		currentPixel.r = 1.0f * x / imageSize.x;
 		currentPixel.g = 1.0f * y / imageSize.y;
 		currentPixel.b = 1.0f / 5.0f;
 	}		
 
-	glm::vec3 lowerLeft(-2.0, -1.0, -1.0);
-    glm::vec3 horizontal(4.0, 0.0, 0.0);
-    glm::vec3 vertical(0.0, 2.0, 0.0);
-   	glm::vec3 origin(0.0, 0.0, 0.0);
+	glm::vec3 lowerLeft(-2.0f, -1.0f, -1.0f);
+    glm::vec3 horizontal(4.0f, 0.0f, 0.0f);
+    glm::vec3 vertical(0.0f, 2.0f, 0.0f);
+   	glm::vec3 origin(0.0f, 0.0f, 0.0f);
 
-   	glm::vec3 sphereCenter(0,0,-1);
-   	float sphereRadius = 0.5;
+	Scene scene;
+	
+   	scene.spheres.emplace_back(Sphere{glm::vec3(0.0f, 0.0f, -1.0f), 0.5f});
+   	scene.spheres.emplace_back(Sphere{glm::vec3(0.0f, 100.5f, -1.0f), 100.0f});
 
 	for (int y = 0 ; y < imageSize.y; ++y)
 	for (int x = 0 ; x < imageSize.x; ++x)
 	{
+		glm::vec3& currentPixel = imageBuffer[x + y * imageSize.x];
+
 		float u = float(x) / imageSize.x;
-        float v = float(y) / imageSize.y;
+        float v = float(y) / imageSize.y;	
 
 		Ray ray{origin, glm::normalize(lowerLeft + u * horizontal + v * vertical)};
 
-		glm::vec3 intersectionPosition;
-   		glm::vec3 intersectionNormal;
-		if (glm::intersectRaySphere(ray.origin, ray.direction, sphereCenter, sphereRadius, intersectionPosition, intersectionNormal))
+		bool isHit = false;
+        glm::length_t distanceToClosest = std::numeric_limits<glm::length_t>::max();
+
+		for (const Sphere& sphere : scene.spheres)
 		{
-			Color& currentPixel = imageBuffer[x + y * imageSize.x];
-			currentPixel.r = 1.0f;
+			glm::vec3 intersectionPosition;
+			glm::vec3 intersectionNormal;
+
+			if (glm::intersectRaySphere(ray.origin, ray.direction, sphere.center, sphere.radius, intersectionPosition, intersectionNormal))
+			{
+                const glm::length_t lenghtToIntersection = glm::vec3(intersectionPosition - origin).length();
+                if(lenghtToIntersection < distanceToClosest)
+                {
+                    distanceToClosest = lenghtToIntersection;
+                	glm::vec3 vectorColor = 0.5f * (intersectionNormal + glm::vec3(1.0f, 1.0f, 1.0f));
+        			currentPixel = vectorColor;
+         			isHit = true;
+                }
+			}
+		}
+
+		if (!isHit)
+		{
+			currentPixel = backgroundColor(ray);
 		}
 	}
 
-	// Covert to image format buffer
-
-	Texel* buffer = static_cast<Texel*>(malloc(sizeof(Texel) * imageSize.x * imageSize.y));
-
-	for (int y = 0 ; y < imageSize.y; ++y)
-	for (int x = 0 ; x < imageSize.x; ++x)
-	{
-		int index = x + y * imageSize.x;
-		Color& currentColor = imageBuffer[index];
-		Texel& currentTexel = buffer[index];
-
-		currentTexel.r = static_cast<uint8_t>(255.999f * currentColor.r);
-		currentTexel.g = static_cast<uint8_t>(255.999f * currentColor.g);
-		currentTexel.b = static_cast<uint8_t>(255.999f * currentColor.b);
-	}	
-
-
-	const std::string filename("output.png");
-	int result = stbi_write_png(filename.c_str(), imageSize.x, imageSize.y, imageComp, buffer, imageSize.x * imageComp);
-	std::cout << " Wrote image to " << filename << " with result " << result << '\n';
-
-	free(buffer);
+	saveImageBufferToFile(imageSize, imageBuffer, "output.png");
 
 	free(imageBuffer);
-
-	const int n = 6;
-	std::cout << n << ' ' << number(n) << '\n';
 
 	return 0;
 }

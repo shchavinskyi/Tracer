@@ -36,3 +36,4 @@ bin/*
 build/*
 lib/*
 output.png
+vc140.pdb
