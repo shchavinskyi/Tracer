@@ -1,25 +1,24 @@
+#include "glm/gtx/intersect.hpp"
+#include "glm/vec2.hpp"
+#include "glm/vec3.hpp"
+#include "save.h"
+#include "scene.h"
+
 #include <iostream>
+#include <limits>
 #include <string>
 #include <vector>
-#include <limits>
-
-#include <glm/vec2.hpp>
-#include <glm/vec3.hpp>
-#include <glm/gtx/intersect.hpp>
-
-#include "scene.h"
-#include "save.h"
 
 struct Ray
 {
-	glm::vec3 origin;
-	glm::vec3 direction;
+    glm::vec3 origin;
+    glm::vec3 direction;
 };
 
 struct HitResult
 {
-	glm::vec3 position;
-   	glm::vec3 normal;
+    glm::vec3 position;
+    glm::vec3 normal;
 };
 
 glm::vec3 backgroundColor(const Ray& ray)
@@ -32,69 +31,77 @@ glm::vec3 backgroundColor(const Ray& ray)
 
 int main(int /*argc*/, char** /*argv*/)
 {
-	glm::ivec2 imageSize{800, 400};
+    glm::ivec2 imageSize{800, 400};
 
-	glm::vec3* imageBuffer = static_cast<glm::vec3*>(malloc(sizeof(glm::vec3) * imageSize.x * imageSize.y));
-	
-	for (int y = 0 ; y < imageSize.y; ++y)
-	for (int x = 0 ; x < imageSize.x; ++x)
-	{
-		glm::vec3& currentPixel = imageBuffer[x + y * imageSize.x];
-		currentPixel.r = 1.0f * x / imageSize.x;
-		currentPixel.g = 1.0f * y / imageSize.y;
-		currentPixel.b = 1.0f / 5.0f;
-	}		
+    glm::vec3* imageBuffer = static_cast<glm::vec3*>(
+        malloc(sizeof(glm::vec3) * imageSize.x * imageSize.y));
 
-	glm::vec3 lowerLeft(-2.0f, -1.0f, -1.0f);
+    for (int y = 0; y < imageSize.y; ++y)
+        for (int x = 0; x < imageSize.x; ++x)
+        {
+            glm::vec3& currentPixel = imageBuffer[x + y * imageSize.x];
+            currentPixel.r = 1.0f * x / imageSize.x;
+            currentPixel.g = 1.0f * y / imageSize.y;
+            currentPixel.b = 1.0f / 5.0f;
+        }
+
+    glm::vec3 lowerLeft(-2.0f, -1.0f, -1.0f);
     glm::vec3 horizontal(4.0f, 0.0f, 0.0f);
     glm::vec3 vertical(0.0f, 2.0f, 0.0f);
-   	glm::vec3 origin(0.0f, 0.0f, 0.0f);
+    glm::vec3 origin(0.0f, 0.0f, 0.0f);
 
-	Scene scene;
-	
-   	scene.spheres.emplace_back(Sphere{glm::vec3(0.0f, 0.0f, -1.0f), 0.5f});
-   	scene.spheres.emplace_back(Sphere{glm::vec3(0.0f, 100.5f, -1.0f), 100.0f});
+    Scene scene;
 
-	for (int y = 0 ; y < imageSize.y; ++y)
-	for (int x = 0 ; x < imageSize.x; ++x)
-	{
-		glm::vec3& currentPixel = imageBuffer[x + y * imageSize.x];
+    scene.spheres.emplace_back(Sphere{glm::vec3(0.0f, 0.0f, -1.0f), 0.5f});
+    scene.spheres.emplace_back(Sphere{glm::vec3(0.0f, 100.5f, -1.0f), 100.0f});
 
-		float u = float(x) / imageSize.x;
-        float v = float(y) / imageSize.y;	
+    for (int y = 0; y < imageSize.y; ++y)
+        for (int x = 0; x < imageSize.x; ++x)
+        {
+            glm::vec3& currentPixel = imageBuffer[x + y * imageSize.x];
 
-		Ray ray{origin, glm::normalize(lowerLeft + u * horizontal + v * vertical)};
+            float u = float(x) / imageSize.x;
+            float v = float(y) / imageSize.y;
 
-		bool isHit = false;
-        glm::length_t distanceToClosest = std::numeric_limits<glm::length_t>::max();
+            Ray ray{origin,
+                    glm::normalize(lowerLeft + u * horizontal + v * vertical)};
 
-		for (const Sphere& sphere : scene.spheres)
-		{
-			glm::vec3 intersectionPosition;
-			glm::vec3 intersectionNormal;
+            bool isHit = false;
+            glm::length_t distanceToClosest =
+                std::numeric_limits<glm::length_t>::max();
 
-			if (glm::intersectRaySphere(ray.origin, ray.direction, sphere.center, sphere.radius, intersectionPosition, intersectionNormal))
-			{
-                const glm::length_t lenghtToIntersection = glm::vec3(intersectionPosition - origin).length();
-                if(lenghtToIntersection < distanceToClosest)
+            for (const Sphere& sphere : scene.spheres)
+            {
+                glm::vec3 intersectionPosition;
+                glm::vec3 intersectionNormal;
+
+                if (glm::intersectRaySphere(
+                        ray.origin, ray.direction, sphere.center, sphere.radius,
+                        intersectionPosition, intersectionNormal))
                 {
-                    distanceToClosest = lenghtToIntersection;
-                	glm::vec3 vectorColor = 0.5f * (intersectionNormal + glm::vec3(1.0f, 1.0f, 1.0f));
-        			currentPixel = vectorColor;
-         			isHit = true;
+                    const glm::length_t lenghtToIntersection =
+                        glm::vec3(intersectionPosition - origin).length();
+                    if (lenghtToIntersection < distanceToClosest)
+                    {
+                        distanceToClosest = lenghtToIntersection;
+                        glm::vec3 vectorColor =
+                            0.5f *
+                            (intersectionNormal + glm::vec3(1.0f, 1.0f, 1.0f));
+                        currentPixel = vectorColor;
+                        isHit = true;
+                    }
                 }
-			}
-		}
+            }
 
-		if (!isHit)
-		{
-			currentPixel = backgroundColor(ray);
-		}
-	}
+            if (!isHit)
+            {
+                currentPixel = backgroundColor(ray);
+            }
+        }
 
-	saveImageBufferToFile(imageSize, imageBuffer, "output.png");
+    saveImageBufferToFile(imageSize, imageBuffer, "output.png");
 
-	free(imageBuffer);
+    free(imageBuffer);
 
-	return 0;
+    return 0;
 }

@@ -1,15 +1,15 @@
 #ifndef _SCENE_
 #define _SCENE_
 
-#include <vector>
 #include <glm/vec3.hpp>
+#include <vector>
 
 struct Ray;
 
 struct Sphere
 {
-	glm::vec3 center;
-	float radius;
+    glm::vec3 center;
+    float radius;
 };
 
 struct Scene
