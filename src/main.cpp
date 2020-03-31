@@ -1,10 +1,13 @@
-#include "glm/gtx/intersect.hpp"
-#include "glm/vec2.hpp"
-#include "glm/vec3.hpp"
+#include "material.h"
+#include "random.h"
+#include "ray.h"
 #include "save.h"
 #include "scene.h"
 #include "utils.h"
 
+#include <glm/gtx/intersect.hpp>
+#include <glm/vec2.hpp>
+#include <glm/vec3.hpp>
 #include <iostream>
 #include <limits>
 #include <string>
@@ -16,18 +19,6 @@ RandomUnitVectorGenerator unitGenerator;
 RandomInUnitSphereGenerator inSphereGenerator;
 
 RandomFloatGenerator floatGenerator;
-
-struct Ray
-{
-    glm::vec3 origin;
-    glm::vec3 direction;
-};
-
-struct HitResult
-{
-    glm::vec3 position;
-    glm::vec3 normal;
-};
 
 struct Camera
 {
@@ -62,13 +53,13 @@ glm::vec3 tracePath(const Ray& ray, int maxDepth, const Scene& scene)
 
     HitResult hitResult;
 
-    for (const Sphere& sphere : scene.spheres)
+    for (const SphereObject& sphere : scene.spheres)
     {
         glm::vec3 intersectionPosition;
         glm::vec3 intersectionNormal;
 
-        if (glm::intersectRaySphere(ray.origin, ray.direction, sphere.center, sphere.radius, intersectionPosition,
-                                    intersectionNormal))
+        if (glm::intersectRaySphere(ray.origin, ray.direction, sphere.geometry.center, sphere.geometry.radius,
+                                    intersectionPosition, intersectionNormal))
         {
             const float lenghtToIntersection = glm::length(intersectionPosition - ray.origin);
             if (lenghtToIntersection < distanceToClosest && lenghtToIntersection > 0.001f)
@@ -76,6 +67,7 @@ glm::vec3 tracePath(const Ray& ray, int maxDepth, const Scene& scene)
                 distanceToClosest = lenghtToIntersection;
                 hitResult.normal = intersectionNormal;
                 hitResult.position = intersectionPosition;
+                hitResult.material = &sphere.material;
                 isHit = true;
             }
         }
@@ -85,10 +77,18 @@ glm::vec3 tracePath(const Ray& ray, int maxDepth, const Scene& scene)
     {
         // glm::vec3 target = hitResult.position + hemisphereGenerator.GenerateFor(hitResult.normal);
         // glm::vec3 target = hitResult.position + hitResult.normal + inSphereGenerator.Generate();
-        glm::vec3 target = hitResult.position + hitResult.normal + unitGenerator.Generate();
+        // glm::vec3 target = hitResult.position + hitResult.normal + unitGenerator.Generate();
 
-        Ray newRay{hitResult.position, glm::normalize(target - hitResult.position)};
-        return 0.5f * tracePath(newRay, maxDepth - 1, scene);
+        // Ray newRay{hitResult.position, glm::normalize(target - hitResult.position)};
+        // return 0.5f * tracePath(newRay, maxDepth - 1, scene);
+
+        Ray scattered;
+        glm::vec3 attenuation;
+
+        if (scatter(ray, hitResult, attenuation, scattered))
+            return attenuation * tracePath(scattered, maxDepth - 1, scene);
+
+        return glm::vec3(0.0f, 0.0f, 0.0f);
     }
 
     return backgroundColor(ray);
@@ -109,8 +109,11 @@ int main(int /*argc*/, char** /*argv*/)
     camera.origin = glm::vec3(0.0f, 0.0f, 0.0f);
 
     Scene scene;
-    scene.spheres.emplace_back(Sphere{glm::vec3(0.0f, 0.0f, -1.0f), 0.5f});
-    scene.spheres.emplace_back(Sphere{glm::vec3(0.0f, 100.5f, -1.0f), 100.0f});
+    SphereObject{Sphere{glm::vec3(0.0f, 0.0f, -1.0f), 0.5f}, Material{MaterialType::Diffuse, glm::vec3(0.7, 0.3, 0.3)}};
+    scene.spheres.emplace_back(SphereObject{Sphere{glm::vec3(0.0f, 0.0f, -1.0f), 0.5f},
+                                            Material{MaterialType::Diffuse, glm::vec3(0.7, 0.3, 0.3)}});
+    scene.spheres.emplace_back(SphereObject{Sphere{glm::vec3(0.0f, 100.5f, -1.0f), 100.0f},
+                                            Material{MaterialType::Diffuse, glm::vec3(0.8, 0.8, 0.0)}});
 
     for (int y = 0; y < imageSize.y; ++y)
     {

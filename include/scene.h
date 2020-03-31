@@ -1,10 +1,10 @@
-#ifndef _SCENE_
-#define _SCENE_
+#ifndef SCENE_H
+#define SCENE_H
+
+#include "material.h"
 
 #include <glm/vec3.hpp>
 #include <vector>
-
-struct Ray;
 
 struct Sphere
 {
@@ -12,9 +12,15 @@ struct Sphere
     float radius;
 };
 
-struct Scene
+struct SphereObject
 {
-    std::vector<Sphere> spheres;
+    Sphere geometry;
+    Material material;
 };
 
-#endif // _SCENE_
+struct Scene
+{
+    std::vector<SphereObject> spheres;
+};
+
+#endif // SCENE_H
