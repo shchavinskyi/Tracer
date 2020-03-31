@@ -16,6 +16,15 @@ bool diffuse(const Ray& /*inRay*/, const HitResult& hitResult, glm::vec3& attenu
     return true;
 }
 
+bool metal(const Ray& inRay, const HitResult& hitResult, glm::vec3& attenuation, Ray& scatteredRay)
+{
+    glm::vec3 reflected = glm::reflect(inRay.direction, hitResult.normal);
+    scatteredRay.origin = hitResult.position;
+    scatteredRay.direction = reflected;
+    attenuation = hitResult.material->albedo;
+    return glm::dot(reflected, hitResult.normal) > 0.0f;
+}
+
 bool scatter(const Ray& inRay, const HitResult& hitResult, glm::vec3& attenuation, Ray& scatteredRay)
 {
     assert(hitResult.material != nullptr);
@@ -26,7 +35,7 @@ bool scatter(const Ray& inRay, const HitResult& hitResult, glm::vec3& attenuatio
         return diffuse(inRay, hitResult, attenuation, scatteredRay);
 
     case MaterialType::Metal:
-        return diffuse(inRay, hitResult, attenuation, scatteredRay);
+        return metal(inRay, hitResult, attenuation, scatteredRay);
     }
 
     return false;
