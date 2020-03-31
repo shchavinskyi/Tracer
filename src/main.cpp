@@ -10,6 +10,13 @@
 #include <string>
 #include <vector>
 
+// TODO find a way to store generators somewhere
+RandomUnitVectorInHemisphereGenerator hemisphereGenerator;
+RandomUnitVectorGenerator unitGenerator;
+RandomInUnitSphereGenerator inSphereGenerator;
+
+RandomFloatGenerator floatGenerator;
+
 struct Ray
 {
     glm::vec3 origin;
@@ -43,12 +50,57 @@ Ray getRay(const Camera& camera, float u, float v)
     return Ray{camera.origin, glm::normalize(camera.lowerLeft + u * camera.horizontal + v * camera.vertical)};
 }
 
+glm::vec3 tracePath(const Ray& ray, int maxDepth, const Scene& scene)
+{
+    if (maxDepth <= 0)
+    {
+        return glm::vec3(0, 0, 0);
+    }
+
+    bool isHit = false;
+    float distanceToClosest = std::numeric_limits<float>::max();
+
+    HitResult hitResult;
+
+    for (const Sphere& sphere : scene.spheres)
+    {
+        glm::vec3 intersectionPosition;
+        glm::vec3 intersectionNormal;
+
+        if (glm::intersectRaySphere(ray.origin, ray.direction, sphere.center, sphere.radius, intersectionPosition,
+                                    intersectionNormal))
+        {
+            const float lenghtToIntersection = glm::length(intersectionPosition - ray.origin);
+            if (lenghtToIntersection < distanceToClosest && lenghtToIntersection > 0.001f)
+            {
+                distanceToClosest = lenghtToIntersection;
+                hitResult.normal = intersectionNormal;
+                hitResult.position = intersectionPosition;
+                isHit = true;
+            }
+        }
+    }
+
+    if (isHit)
+    {
+        // glm::vec3 target = hitResult.position + hemisphereGenerator.GenerateFor(hitResult.normal);
+        // glm::vec3 target = hitResult.position + hitResult.normal + inSphereGenerator.Generate();
+        glm::vec3 target = hitResult.position + hitResult.normal + unitGenerator.Generate();
+
+        Ray newRay{hitResult.position, glm::normalize(target - hitResult.position)};
+        return 0.5f * tracePath(newRay, maxDepth - 1, scene);
+    }
+
+    return backgroundColor(ray);
+}
+
 int main(int /*argc*/, char** /*argv*/)
 {
-    glm::ivec2 imageSize{800, 400};
+    glm::ivec2 imageSize{600, 300};
     glm::vec3* imageBuffer = static_cast<glm::vec3*>(malloc(sizeof(glm::vec3) * imageSize.x * imageSize.y));
 
-    const int samplesPerPixel = 20;
+    constexpr int samplesPerPixel = 50;
+    constexpr int maxBounces = 50;
 
     Camera camera;
     camera.lowerLeft = glm::vec3(-2.0f, -1.0f, -1.0f);
@@ -68,41 +120,12 @@ int main(int /*argc*/, char** /*argv*/)
 
             for (int i = 0; i < samplesPerPixel; ++i)
             {
-                float u = (float(x) + randomUnitFloat()) / imageSize.x;
-                float v = (float(y) + randomUnitFloat()) / imageSize.y;
+                float u = (float(x) + floatGenerator.Generate()) / imageSize.x;
+                float v = (float(y) + floatGenerator.Generate()) / imageSize.y;
 
                 Ray ray = getRay(camera, u, v);
 
-                bool isHit = false;
-                glm::length_t distanceToClosest = std::numeric_limits<glm::length_t>::max();
-                glm::vec3 colorOfClosest;
-
-                for (const Sphere& sphere : scene.spheres)
-                {
-                    glm::vec3 intersectionPosition;
-                    glm::vec3 intersectionNormal;
-
-                    if (glm::intersectRaySphere(ray.origin, ray.direction, sphere.center, sphere.radius,
-                                                intersectionPosition, intersectionNormal))
-                    {
-                        const glm::length_t lenghtToIntersection =
-                            glm::vec3(intersectionPosition - ray.origin).length();
-                        if (lenghtToIntersection < distanceToClosest)
-                        {
-                            distanceToClosest = lenghtToIntersection;
-                            glm::vec3 vectorColor = 0.5f * (intersectionNormal + glm::vec3(1.0f, 1.0f, 1.0f));
-                            colorOfClosest = vectorColor;
-                            isHit = true;
-                        }
-                    }
-                }
-
-                if (!isHit)
-                {
-                    colorOfClosest = backgroundColor(ray);
-                }
-
-                acumulatedColor += colorOfClosest;
+                acumulatedColor += tracePath(ray, maxBounces, scene);
             }
 
             acumulatedColor /= samplesPerPixel;
