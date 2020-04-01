@@ -99,8 +99,8 @@ int main(int /*argc*/, char** /*argv*/)
     glm::ivec2 imageSize{600, 300};
     glm::vec3* imageBuffer = static_cast<glm::vec3*>(malloc(sizeof(glm::vec3) * imageSize.x * imageSize.y));
 
-    constexpr int samplesPerPixel = 25;
-    constexpr int maxBounces = 25;
+    constexpr int samplesPerPixel = 50;
+    constexpr int maxBounces = 50;
 
     Camera camera;
     camera.lowerLeft = glm::vec3(-2.0f, -1.0f, -1.0f);
@@ -111,14 +111,14 @@ int main(int /*argc*/, char** /*argv*/)
     Scene scene;
 
     scene.spheres.emplace_back(SphereObject{Sphere{glm::vec3(0.0f, 0.0f, -1.0f), 0.5f},
-                                            Material{MaterialType::Diffuse, glm::vec3(0.7f, 0.3f, 0.3f)}});
+                                            Material{MaterialType::Diffuse, glm::vec3(0.7f, 0.3f, 0.3f), 0.0f}});
     scene.spheres.emplace_back(SphereObject{Sphere{glm::vec3(0.0f, 100.5f, -1.0f), 100.0f},
-                                            Material{MaterialType::Diffuse, glm::vec3(0.8f, 0.8f, 0.0f)}});
+                                            Material{MaterialType::Diffuse, glm::vec3(0.8f, 0.8f, 0.0f), 0.0f}});
 
     scene.spheres.emplace_back(SphereObject{Sphere{glm::vec3(1.0f, 0.0f, -1.0f), 0.5f},
-                                            Material{MaterialType::Metal, glm::vec3(0.8f, 0.6f, 0.2f)}});
+                                            Material{MaterialType::Metal, glm::vec3(0.8f, 0.6f, 0.2f), 0.3f}});
     scene.spheres.emplace_back(SphereObject{Sphere{glm::vec3(-1.0f, 0.0f, -1.0f), 0.5f},
-                                            Material{MaterialType::Metal, glm::vec3(0.8f, 0.8f, 0.8f)}});
+                                            Material{MaterialType::Dielectric, glm::vec3(0.8f, 0.8f, 0.8f), 0.0f}});
 
     for (int y = 0; y < imageSize.y; ++y)
     {
