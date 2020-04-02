@@ -1,3 +1,4 @@
+#include "camera.h"
 #include "material.h"
 #include "random.h"
 #include "ray.h"
@@ -20,14 +21,6 @@ RandomInUnitSphereGenerator inSphereGenerator;
 
 RandomFloatGenerator floatGenerator;
 
-struct Camera
-{
-    glm::vec3 origin;
-    glm::vec3 lowerLeft;
-    glm::vec3 horizontal;
-    glm::vec3 vertical;
-};
-
 glm::vec3 backgroundColor(const Ray& ray)
 {
     float t = 0.5f * (ray.direction.y + 1.0f);
@@ -38,7 +31,8 @@ glm::vec3 backgroundColor(const Ray& ray)
 
 Ray getRay(const Camera& camera, float u, float v)
 {
-    return Ray{camera.origin, glm::normalize(camera.lowerLeft + u * camera.horizontal + v * camera.vertical)};
+    return Ray{camera.origin,
+               glm::normalize(camera.lowerLeft + u * camera.horizontal + v * camera.vertical - camera.origin)};
 }
 
 glm::vec3 tracePath(const Ray& ray, int maxDepth, const Scene& scene)
@@ -102,11 +96,12 @@ int main(int /*argc*/, char** /*argv*/)
     constexpr int samplesPerPixel = 50;
     constexpr int maxBounces = 50;
 
-    Camera camera;
-    camera.lowerLeft = glm::vec3(-2.0f, -1.0f, -1.0f);
-    camera.horizontal = glm::vec3(4.0f, 0.0f, 0.0f);
-    camera.vertical = glm::vec3(0.0f, 2.0f, 0.0f);
-    camera.origin = glm::vec3(0.0f, 0.0f, 0.0f);
+    glm::vec3 position(-2.5f, -2.0f, 1.5f);
+    glm::vec3 at(0.0f, 0.0f, -1.0f);
+    glm::vec3 up(0.0f, 1.0f, 0.0f);
+    const float aspectRatio = float(imageSize.x) / imageSize.y;
+    const float fov = 45.0f;
+    Camera camera = cameraFromView(position, at, up, fov, aspectRatio);
 
     Scene scene;
 
