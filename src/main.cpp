@@ -15,11 +15,8 @@
 #include <vector>
 
 // TODO find a way to store generators somewhere
-RandomUnitVectorInHemisphereGenerator hemisphereGenerator;
-RandomUnitVectorGenerator unitGenerator;
-RandomInUnitSphereGenerator inSphereGenerator;
-
 RandomFloatGenerator floatGenerator;
+RandomVectorGenerator colorGenerator(0.0f, 1.0f);
 
 glm::vec3 backgroundColor(const Ray& ray)
 {
@@ -69,13 +66,6 @@ glm::vec3 tracePath(const Ray& ray, int maxDepth, const Scene& scene)
 
     if (isHit)
     {
-        // glm::vec3 target = hitResult.position + hemisphereGenerator.GenerateFor(hitResult.normal);
-        // glm::vec3 target = hitResult.position + hitResult.normal + inSphereGenerator.Generate();
-        // glm::vec3 target = hitResult.position + hitResult.normal + unitGenerator.Generate();
-
-        // Ray newRay{hitResult.position, glm::normalize(target - hitResult.position)};
-        // return 0.5f * tracePath(newRay, maxDepth - 1, scene);
-
         Ray scattered;
         glm::vec3 attenuation;
 
@@ -96,24 +86,65 @@ int main(int /*argc*/, char** /*argv*/)
     constexpr int samplesPerPixel = 50;
     constexpr int maxBounces = 50;
 
-    glm::vec3 position(-2.5f, -2.0f, 1.5f);
-    glm::vec3 at(0.0f, 0.0f, -1.0f);
-    glm::vec3 up(0.0f, 1.0f, 0.0f);
+    glm::vec3 cameraPosition(-4.0f, 4.0f, 2.5f);
+    glm::vec3 at(0.0f, 0.0f, 0.0f);
+    glm::vec3 up(0.0f, 0.0f, 1.0f);
+
     const float aspectRatio = float(imageSize.x) / imageSize.y;
     const float fov = 45.0f;
-    Camera camera = cameraFromView(position, at, up, fov, aspectRatio);
+    Camera camera = cameraFromView(cameraPosition, at, up, fov, aspectRatio);
 
     Scene scene;
 
-    scene.spheres.emplace_back(SphereObject{Sphere{glm::vec3(0.0f, 0.0f, -1.0f), 0.5f},
-                                            Material{MaterialType::Diffuse, glm::vec3(0.7f, 0.3f, 0.3f), 0.0f}});
-    scene.spheres.emplace_back(SphereObject{Sphere{glm::vec3(0.0f, 100.5f, -1.0f), 100.0f},
+    scene.spheres.emplace_back(SphereObject{Sphere{glm::vec3(0.0f, 0.0f, -1000.0f), 1000.0f},
                                             Material{MaterialType::Diffuse, glm::vec3(0.8f, 0.8f, 0.0f), 0.0f}});
 
-    scene.spheres.emplace_back(SphereObject{Sphere{glm::vec3(1.0f, 0.0f, -1.0f), 0.5f},
-                                            Material{MaterialType::Metal, glm::vec3(0.8f, 0.6f, 0.2f), 0.3f}});
-    scene.spheres.emplace_back(SphereObject{Sphere{glm::vec3(-1.0f, 0.0f, -1.0f), 0.5f},
-                                            Material{MaterialType::Dielectric, glm::vec3(0.8f, 0.8f, 0.8f), 0.0f}});
+    /*
+        scene.spheres.emplace_back(SphereObject{Sphere{glm::vec3(0.0f, 0.0f, 0.5f), 0.5f},
+                                                Material{MaterialType::Diffuse, glm::vec3(0.7f, 0.3f, 0.3f), 0.0f}});
+        scene.spheres.emplace_back(SphereObject{Sphere{glm::vec3(1.1f, 0.0f, 0.5f), 0.5f},
+                                                Material{MaterialType::Metal, glm::vec3(0.8f, 0.6f, 0.2f), 0.3f}});
+        scene.spheres.emplace_back(SphereObject{Sphere{glm::vec3(-1.1f, 0.0f, 0.5f), 0.5f},
+                                                Material{MaterialType::Dielectric, glm::vec3(0.8f, 0.8f, 0.8f), 0.0f}});
+
+        scene.spheres.emplace_back(SphereObject{Sphere{glm::vec3(0.0f, 1.5f, 0.2f), 0.2f},
+                                                Material{MaterialType::Diffuse, glm::vec3(0.9f, 0.1f, 0.1f), 0.5f}});
+        scene.spheres.emplace_back(SphereObject{Sphere{glm::vec3(0.0f, -1.5f, 0.2f), 0.2f},
+                                                Material{MaterialType::Diffuse, glm::vec3(0.1f, 0.9f, 0.1f), 0.5f}});
+    */
+
+    constexpr float width = 7.0f;
+    constexpr float minRadiuswidth = 0.15f;
+    constexpr float maxRadiuswidth = 0.85f;
+    constexpr uint32_t sphereCount = 50;
+    for (int i = 0; i < sphereCount; ++i)
+    {
+        glm::vec3 position;
+        position.x = (floatGenerator.Generate() * width * 2.0f) - width;
+        position.y = (floatGenerator.Generate() * width * 2.0f) - width;
+        float radius = floatGenerator.Generate() * (maxRadiuswidth - minRadiuswidth) + minRadiuswidth;
+        position.z = radius;
+
+        glm::vec3 color = colorGenerator.Generate();
+
+        float materialFactor = floatGenerator.Generate();
+
+        if (materialFactor < 0.4f)
+        {
+            scene.spheres.emplace_back(
+                SphereObject{Sphere{position, radius}, Material{MaterialType::Diffuse, color, 0.0f}});
+        }
+        else if (materialFactor > 0.6f)
+        {
+            scene.spheres.emplace_back(SphereObject{Sphere{position, radius},
+                                                    Material{MaterialType::Metal, color, floatGenerator.Generate()}});
+        }
+        else
+        {
+            scene.spheres.emplace_back(
+                SphereObject{Sphere{position, radius}, Material{MaterialType::Dielectric, color, 0.0f}});
+        }
+    }
 
     for (int y = 0; y < imageSize.y; ++y)
     {

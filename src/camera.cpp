@@ -11,7 +11,7 @@ Camera cameraFromView(const glm::vec3& lookFrom, const glm::vec3& lookAt, const 
     float halfWidth = aspect * halfHeight;
     glm::vec3 w = glm::normalize(lookFrom - lookAt);
     glm::vec3 u = glm::normalize(glm::cross(up, w));
-    glm::vec3 v = glm::cross(w, u);
+    glm::vec3 v = glm::cross(u, w);
 
     Camera result;
     result.origin = lookFrom;
