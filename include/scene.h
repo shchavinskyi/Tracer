@@ -2,25 +2,23 @@
 #define SCENE_H
 
 #include "material.h"
+#include "objects.h"
 
 #include <glm/vec3.hpp>
 #include <vector>
 
-struct Sphere
-{
-    glm::vec3 center;
-    float radius;
-};
-
-struct SphereObject
-{
-    Sphere geometry;
-    Material material;
-};
+struct BVHTree;
 
 struct Scene
 {
-    std::vector<SphereObject> spheres;
+    std::vector<Sphere> spheresGeometry;
+    std::vector<Material> spheresMaterial;
 };
+
+void AddSphere(Scene& scene, Sphere&& sphere, Material&& material);
+
+glm::vec3 TracePath(const Ray& ray, int maxDepth, const Scene& scene);
+
+glm::vec3 TracePathWithBVH(const Ray& ray, int maxDepth, const Scene& scene, const BVHTree& tree);
 
 #endif // SCENE_H

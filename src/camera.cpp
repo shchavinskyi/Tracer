@@ -2,7 +2,7 @@
 
 #include <glm/glm.hpp>
 
-Camera cameraFromView(const glm::vec3& lookFrom, const glm::vec3& lookAt, const glm::vec3& up,
+Camera CameraFromView(const glm::vec3& lookFrom, const glm::vec3& lookAt, const glm::vec3& up,
                       float vfov, // top to bottom, in degrees
                       float aspect)
 {
