@@ -25,16 +25,18 @@ void GenerateRandomScene(Scene& scene, uint32_t sphereCount)
     AddSphere(scene, Sphere{glm::vec3(0.0f, 0.0f, -1000.0f), 1000.0f},
               Material{MaterialType::Diffuse, glm::vec3(0.8f, 0.8f, 0.0f), 0.0f});
 
-    constexpr float width = 7.0f;
-    constexpr float minRadiuswidth = 0.15f;
-    constexpr float maxRadiuswidth = 0.85f;
+    constexpr float width = 20.0f;
+    constexpr float minRadiuswidth = 0.05f;
+    constexpr float maxRadiuswidth = 0.2f;
+    constexpr float maxHeight = 3.0f;
+
     for (uint32_t i = 0; i < sphereCount; ++i)
     {
         glm::vec3 position;
         position.x = (floatGenerator.Generate() * width * 2.0f) - width;
         position.y = (floatGenerator.Generate() * width * 2.0f) - width;
         float radius = floatGenerator.Generate() * (maxRadiuswidth - minRadiuswidth) + minRadiuswidth;
-        position.z = radius;
+        position.z = glm::max(radius, floatGenerator.Generate() * maxHeight);
 
         glm::vec3 color = colorGenerator.Generate();
 
@@ -106,8 +108,8 @@ int main(int /*argc*/, char** /*argv*/)
 {
     Settings settings = DefaultSettings();
 
-    glm::vec3 cameraPosition(-4.0f, 4.0f, 2.5f);
-    glm::vec3 at(0.0f, 0.0f, 0.0f);
+    glm::vec3 cameraPosition(-3.0f, 0.0f, 1.5f);
+    glm::vec3 at(0.0f, 0.0f, 1.5f);
     glm::vec3 up(0.0f, 0.0f, 1.0f);
 
     const float aspectRatio = float(settings.imageSize.x) / settings.imageSize.y;
@@ -116,18 +118,14 @@ int main(int /*argc*/, char** /*argv*/)
 
     // Prepare scene
     Scene scene;
-    constexpr uint32_t sphereCount = 10;
+    constexpr uint32_t sphereCount = 1000;
     GenerateRandomScene(scene, sphereCount);
-
-    // Build BVH
-    BVHTree tree = BuildBVHTree(scene.spheresGeometry);
-    DEBUG("BVHTree node count %d", tree.nodes.size());
 
     int bufferSize = sizeof(glm::vec3) * settings.imageSize.x * settings.imageSize.y;
     glm::vec3* imageBuffer = static_cast<glm::vec3*>(malloc(bufferSize));
 
     {
-        TRACE_EXECUTION("TraceNormal");
+        TRACE_EXECUTION("TraceBrutteForce");
         TraceScene(scene, settings, camera, imageBuffer);
     }
 
@@ -136,6 +134,8 @@ int main(int /*argc*/, char** /*argv*/)
     // BVH variant
     memset(imageBuffer, 0, bufferSize);
 
+    // Build BVH
+    BVHTree tree = BuildBVHTree(scene.spheresGeometry);
     {
         TRACE_EXECUTION("TraceBVH");
         TraceSceneBVH(scene, settings, camera, imageBuffer, tree);

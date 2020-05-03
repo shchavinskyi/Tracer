@@ -65,7 +65,9 @@
         "xmemory": "cpp",
         "xmemory0": "cpp",
         "xstddef": "cpp",
-        "xtr1common": "cpp"
+        "xtr1common": "cpp",
+        "stack": "cpp",
+        "deque": "cpp"
     },
     "editor.tabSize": 4,
     "editor.insertSpaces": true,

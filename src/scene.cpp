@@ -4,6 +4,8 @@
 #include "ray.h"
 
 #include <glm/gtx/intersect.hpp>
+#include <set>
+#include <vector>
 
 namespace {
 glm::vec3 backgroundColor(const Ray& ray)
@@ -73,22 +75,87 @@ glm::vec3 TracePath(const Ray& ray, int maxDepth, const Scene& scene)
     return backgroundColor(ray);
 }
 
-void TraverseBVH(const Ray& ray, const BVHTree& tree, uint32_t nodeIndex, std::vector<uint32_t>& objectIndexes)
+void TraverseBVH_old(const Ray& ray, const BVHTree& tree, const BVHNode& node, std::vector<uint32_t>& objectIndexes)
 {
-    const BVHNode& node = tree.nodes[nodeIndex];
-
-    if (Hit(ray, node.aabb))
+    if (node.leftNodeIndex == node.rightNodeIndex)
     {
-        if (node.leftNodeIndex == node.rightNodeIndex)
+        // Hit last aabb
+        objectIndexes.push_back(node.leftNodeIndex);
+        return;
+    }
+
+    const BVHNode& leftNode = tree.nodes[node.leftNodeIndex];
+    const BVHNode& rightNode = tree.nodes[node.rightNodeIndex];
+
+    if (Hit(ray, leftNode.aabb))
+    {
+        TraverseBVH_old(ray, tree, leftNode, objectIndexes);
+    }
+    if (Hit(ray, rightNode.aabb))
+    {
+        TraverseBVH_old(ray, tree, rightNode, objectIndexes);
+    }
+}
+
+void TraverseBVH(const Ray& ray, const BVHTree& tree, const BVHNode& node, std::vector<uint32_t>& objectIndexes)
+{
+    if (node.leftNodeIndex == node.rightNodeIndex)
+    {
+        // Hit last aabb
+        objectIndexes.push_back(node.leftNodeIndex);
+        return;
+    }
+
+    std::vector<uint32_t> starts;
+
+    starts.reserve(size_t(glm::log2(float(tree.nodes.size()) / 2.0f)));
+    starts.push_back(node.rightNodeIndex);
+    starts.push_back(node.leftNodeIndex);
+
+    while (!starts.empty())
+    {
+        BVHNode* currentNode = (BVHNode*)&tree.nodes[starts.back()];
+
+        starts.pop_back();
+
+        while (currentNode)
         {
-            // Hit last aabb
-            objectIndexes.push_back(node.objectIndex);
-            return;
-        }
-        else
-        {
-            TraverseBVH(ray, tree, node.leftNodeIndex, objectIndexes);
-            TraverseBVH(ray, tree, node.rightNodeIndex, objectIndexes);
+            if (Hit(ray, currentNode->aabb))
+            {
+                if (currentNode->leftNodeIndex == currentNode->rightNodeIndex)
+                {
+                    objectIndexes.push_back(currentNode->leftNodeIndex);
+                    currentNode = nullptr;
+                }
+                else
+                {
+                    BVHNode* leftNode = (BVHNode*)&tree.nodes[currentNode->leftNodeIndex];
+                    BVHNode* rightNode = (BVHNode*)&tree.nodes[currentNode->rightNodeIndex];
+                    const bool hitLeft = Hit(ray, leftNode->aabb);
+                    const bool hitRight = Hit(ray, rightNode->aabb);
+                    if (hitLeft && hitRight)
+                    {
+                        starts.push_back(currentNode->rightNodeIndex);
+                        currentNode = leftNode;
+                    }
+                    else if (hitLeft)
+                    {
+                        currentNode = leftNode;
+                    }
+                    else if (hitRight)
+                    {
+                        currentNode = rightNode;
+                    }
+                    else
+                    {
+                        currentNode = nullptr;
+                    }
+                }
+            }
+            else
+            {
+                currentNode = nullptr;
+            }
         }
     }
 }
@@ -105,27 +172,32 @@ glm::vec3 TracePathWithBVH(const Ray& ray, int maxDepth, const Scene& scene, con
 
     HitResult hitResult;
 
-    std::vector<uint32_t> objectIndexes;
-    TraverseBVH(ray, tree, 0, objectIndexes);
-
-    for (uint32_t& objectIndex : objectIndexes)
+    const BVHNode& rootNode = tree.nodes[0];
+    if (Hit(ray, rootNode.aabb))
     {
-        const Sphere& sphere = scene.spheresGeometry[objectIndex];
+        std::vector<uint32_t> objectIndexes;
 
-        glm::vec3 intersectionPosition;
-        glm::vec3 intersectionNormal;
+        TraverseBVH(ray, tree, rootNode, objectIndexes);
 
-        if (glm::intersectRaySphere(ray.origin, ray.direction, sphere.center, sphere.radius, intersectionPosition,
-                                    intersectionNormal))
+        for (uint32_t& objectIndex : objectIndexes)
         {
-            const float lenghtToIntersection = glm::length(intersectionPosition - ray.origin);
-            if (lenghtToIntersection < distanceToClosest && lenghtToIntersection > 0.001f)
+            const Sphere& sphere = scene.spheresGeometry[objectIndex];
+
+            glm::vec3 intersectionPosition;
+            glm::vec3 intersectionNormal;
+
+            if (glm::intersectRaySphere(ray.origin, ray.direction, sphere.center, sphere.radius, intersectionPosition,
+                                        intersectionNormal))
             {
-                distanceToClosest = lenghtToIntersection;
-                hitResult.normal = intersectionNormal;
-                hitResult.position = intersectionPosition;
-                hitResult.material = &scene.spheresMaterial[objectIndex];
-                isHit = true;
+                const float lenghtToIntersection = glm::length(intersectionPosition - ray.origin);
+                if (lenghtToIntersection < distanceToClosest && lenghtToIntersection > 0.001f)
+                {
+                    distanceToClosest = lenghtToIntersection;
+                    hitResult.normal = intersectionNormal;
+                    hitResult.position = intersectionPosition;
+                    hitResult.material = &scene.spheresMaterial[objectIndex];
+                    isHit = true;
+                }
             }
         }
     }

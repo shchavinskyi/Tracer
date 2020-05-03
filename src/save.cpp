@@ -35,9 +35,8 @@ void saveImageBufferToFile(const glm::ivec2& size, glm::vec3* renderBuffer, cons
     constexpr int numberOfChenels = 3; /* rgb */
     int result =
         stbi_write_png(filename.c_str(), size.x, size.y, numberOfChenels, outputBuffer, size.x * numberOfChenels);
-    // std::cout << " Wrote image to " << filename << " with result " << result << '\n';
 
-    INFO("Wrote image to");
+    INFO("Image successfully save to file : %s ", filename.c_str());
 
     free(outputBuffer);
 }

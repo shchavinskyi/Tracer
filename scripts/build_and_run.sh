@@ -2,7 +2,7 @@
 
 ROOT=$(cd $(dirname $0); cd ..; pwd)
 
-CONFIG="Debug"
+CONFIG="Release"
 
 set -ex
 

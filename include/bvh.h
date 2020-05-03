@@ -17,18 +17,17 @@ struct Aabb
 
 inline bool Hit(const Ray& ray, const Aabb& aabb)
 {
-    for (int a = 0; a < 3; a++)
-    {
-        auto invD = 1.0f / ray.direction[a];
-        auto t0 = (aabb.min[a] - ray.origin[a]) * invD;
-        auto t1 = (aabb.max[a] - ray.origin[a]) * invD;
-        if (invD < 0.0f)
-            std::swap(t0, t1);
-        if (t1 <= t0)
-            return false;
-    }
+    glm::vec3 invD{1.0f / ray.direction.x, 1.0f / ray.direction.y, 1.0f / ray.direction.z};
+    glm::vec3 t0s = (aabb.min - ray.origin) * invD;
+    glm::vec3 t1s = (aabb.max - ray.origin) * invD;
 
-    return true;
+    glm::vec3 tsmaller = glm::min(t0s, t1s);
+    glm::vec3 tbigger = glm::max(t0s, t1s);
+
+    float tmin = glm::max(tsmaller[0], glm::max(tsmaller[1], tsmaller[2]));
+    float tmax = glm::min(tbigger[0], glm::min(tbigger[1], tbigger[2]));
+
+    return tmin < tmax;
 }
 
 inline Aabb SphereAabb(const Sphere& sphere)
@@ -46,8 +45,13 @@ inline Aabb SurroundingAabb(const Aabb& box0, const Aabb& box1)
 
 struct BVHNode
 {
+    BVHNode()
+        : leftNodeIndex(0)
+        , rightNodeIndex(std::numeric_limits<uint32_t>::max())
+    {
+    }
+
     Aabb aabb;
-    uint32_t objectIndex;
     uint32_t leftNodeIndex;
     uint32_t rightNodeIndex;
 };
@@ -71,21 +75,8 @@ inline bool BoxYCompare(const Sphere& left, const Sphere& right) { return BoxCom
 
 inline bool BoxZCompare(const Sphere& left, const Sphere& right) { return BoxCompare(left, right, 2); }
 
-BVHNode CreateNode(BVHTree& tree, std::vector<Sphere>& spheres, std::size_t start, std::size_t end);
+BVHNode CreateNode(BVHTree& tree, std::vector<Sphere>& spheres, std::uint32_t start, std::uint32_t end);
 
-inline BVHTree BuildBVHTree(std::vector<Sphere>& spheres)
-{
-    TRACE_EXECUTION("BuildBVHTree");
-
-    BVHTree tree;
-
-    tree.nodes.reserve(spheres.size() * 2);
-
-    tree.nodes.push_back(BVHNode{});
-    BVHNode& rootNode = tree.nodes[0];
-    rootNode = CreateNode(tree, spheres, 0, spheres.size());
-
-    return tree;
-}
+BVHTree BuildBVHTree(std::vector<Sphere>& spheres);
 
 #endif // BVH_H

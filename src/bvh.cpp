@@ -1,19 +1,17 @@
 #include "bvh.h"
 
-BVHNode CreateNode(BVHTree& tree, std::vector<Sphere>& spheres, std::size_t start, std::size_t end)
+BVHNode CreateNode(BVHTree& tree, std::vector<Sphere>& spheres, std::uint32_t start, std::uint32_t end)
 {
     BVHNode result;
 
     int axis = rand() % 3;
     auto comparator = (axis == 0) ? BoxXCompare : (axis == 1) ? BoxYCompare : BoxZCompare;
 
-    size_t objectSpan = end - start;
+    uint32_t objectSpan = end - start;
 
     if (objectSpan == 1)
     {
         result.leftNodeIndex = result.rightNodeIndex = start;
-
-        result.objectIndex = start;
 
         // fill aabb
         result.aabb = SphereAabb(spheres[result.leftNodeIndex]);
@@ -24,12 +22,12 @@ BVHNode CreateNode(BVHTree& tree, std::vector<Sphere>& spheres, std::size_t star
 
         auto mid = start + objectSpan / 2;
 
-        result.leftNodeIndex = tree.nodes.size();
+        result.leftNodeIndex = static_cast<uint32_t>(tree.nodes.size());
         tree.nodes.push_back(BVHNode{});
         BVHNode& leftNode = tree.nodes[result.leftNodeIndex];
         leftNode = CreateNode(tree, spheres, start, mid);
 
-        result.rightNodeIndex = tree.nodes.size();
+        result.rightNodeIndex = static_cast<uint32_t>(tree.nodes.size());
         tree.nodes.push_back(BVHNode{});
         BVHNode& rightNode = tree.nodes[result.rightNodeIndex];
         rightNode = CreateNode(tree, spheres, mid, end);
@@ -39,4 +37,18 @@ BVHNode CreateNode(BVHTree& tree, std::vector<Sphere>& spheres, std::size_t star
     }
 
     return result;
+}
+
+BVHTree BuildBVHTree(std::vector<Sphere>& spheres)
+{
+    TRACE_EXECUTION("BuildBVHTree");
+
+    BVHTree tree;
+
+    tree.nodes.reserve(spheres.size() * 2 + 1);
+    tree.nodes.push_back(BVHNode{});
+    BVHNode& rootNode = tree.nodes[0];
+    rootNode = CreateNode(tree, spheres, 0, static_cast<uint32_t>(spheres.size()));
+
+    return tree;
 }
