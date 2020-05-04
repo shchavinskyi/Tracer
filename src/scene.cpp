@@ -10,7 +10,7 @@
 namespace {
 glm::vec3 backgroundColor(const Ray& ray)
 {
-    float t = 0.5f * (ray.direction.y + 1.0f);
+    float t = 0.5f * (ray.direction.z + 1.0f);
     const glm::vec3 top{0.5f, 0.7f, 1.0f};
     const glm::vec3 bottom(1.0f, 1.0f, 1.0f);
     return (1.0f - t) * top + t * bottom;
@@ -23,59 +23,7 @@ void AddSphere(Scene& scene, Sphere&& sphere, Material&& material)
     scene.spheresMaterial.emplace_back(std::move(material));
 }
 
-glm::vec3 TracePath(const Ray& ray, int maxDepth, const Scene& scene)
-{
-    if (maxDepth <= 0)
-    {
-        return glm::vec3(0, 0, 0);
-    }
-
-    bool isHit = false;
-    float distanceToClosest = std::numeric_limits<float>::max();
-
-    HitResult hitResult;
-
-    // TODO save material id somewhere
-    // SO number of material can be lower
-    int objectIndex = 0;
-
-    for (const Sphere& sphere : scene.spheresGeometry)
-    {
-        glm::vec3 intersectionPosition;
-        glm::vec3 intersectionNormal;
-
-        if (glm::intersectRaySphere(ray.origin, ray.direction, sphere.center, sphere.radius, intersectionPosition,
-                                    intersectionNormal))
-        {
-            const float lenghtToIntersection = glm::length(intersectionPosition - ray.origin);
-            if (lenghtToIntersection < distanceToClosest && lenghtToIntersection > 0.001f)
-            {
-                distanceToClosest = lenghtToIntersection;
-                hitResult.normal = intersectionNormal;
-                hitResult.position = intersectionPosition;
-                hitResult.material = &scene.spheresMaterial[objectIndex];
-                isHit = true;
-            }
-        }
-
-        ++objectIndex;
-    }
-
-    if (isHit)
-    {
-        Ray scattered;
-        glm::vec3 attenuation;
-
-        if (scatter(ray, hitResult, attenuation, scattered))
-            return attenuation * TracePath(scattered, maxDepth - 1, scene);
-
-        return glm::vec3(0.0f, 0.0f, 0.0f);
-    }
-
-    return backgroundColor(ray);
-}
-
-void TraverseBVH_old(const Ray& ray, const BVHTree& tree, const BVHNode& node, std::vector<uint32_t>& objectIndexes)
+void TraverseBVH(const Ray& ray, const BVHTree& tree, const BVHNode& node, std::vector<uint32_t>& objectIndexes)
 {
     if (node.leftNodeIndex == node.rightNodeIndex)
     {
@@ -89,15 +37,16 @@ void TraverseBVH_old(const Ray& ray, const BVHTree& tree, const BVHNode& node, s
 
     if (Hit(ray, leftNode.aabb))
     {
-        TraverseBVH_old(ray, tree, leftNode, objectIndexes);
+        TraverseBVH(ray, tree, leftNode, objectIndexes);
     }
     if (Hit(ray, rightNode.aabb))
     {
-        TraverseBVH_old(ray, tree, rightNode, objectIndexes);
+        TraverseBVH(ray, tree, rightNode, objectIndexes);
     }
 }
 
-void TraverseBVH(const Ray& ray, const BVHTree& tree, const BVHNode& node, std::vector<uint32_t>& objectIndexes)
+void TraverseBVH_no_recursion(const Ray& ray, const BVHTree& tree, const BVHNode& node,
+                              std::vector<uint32_t>& objectIndexes)
 {
     if (node.leftNodeIndex == node.rightNodeIndex)
     {
@@ -160,7 +109,7 @@ void TraverseBVH(const Ray& ray, const BVHTree& tree, const BVHNode& node, std::
     }
 }
 
-glm::vec3 TracePathWithBVH(const Ray& ray, int maxDepth, const Scene& scene, const BVHTree& tree)
+glm::vec3 TracePath(const Ray& ray, int maxDepth, const Scene& scene, const BVHTree& tree)
 {
     if (maxDepth <= 0)
     {
@@ -208,7 +157,7 @@ glm::vec3 TracePathWithBVH(const Ray& ray, int maxDepth, const Scene& scene, con
         glm::vec3 attenuation;
 
         if (scatter(ray, hitResult, attenuation, scattered))
-            return attenuation * TracePathWithBVH(scattered, maxDepth - 1, scene, tree);
+            return attenuation * TracePath(scattered, maxDepth - 1, scene, tree);
 
         return glm::vec3(0.0f, 0.0f, 0.0f);
     }

@@ -25,9 +25,9 @@ void GenerateRandomScene(Scene& scene, uint32_t sphereCount)
     AddSphere(scene, Sphere{glm::vec3(0.0f, 0.0f, -1000.0f), 1000.0f},
               Material{MaterialType::Diffuse, glm::vec3(0.8f, 0.8f, 0.0f), 0.0f});
 
-    constexpr float width = 20.0f;
+    constexpr float width = 10.0f;
     constexpr float minRadiuswidth = 0.05f;
-    constexpr float maxRadiuswidth = 0.2f;
+    constexpr float maxRadiuswidth = 0.25f;
     constexpr float maxHeight = 3.0f;
 
     for (uint32_t i = 0; i < sphereCount; ++i)
@@ -55,7 +55,8 @@ void GenerateRandomScene(Scene& scene, uint32_t sphereCount)
     }
 }
 
-void TraceScene(const Scene& scene, const Settings& setting, const Camera& camera, glm::vec3* imageBuffer)
+void TraceScene(const Scene& scene, const Settings& setting, const Camera& camera, glm::vec3* imageBuffer,
+                const BVHTree& tree)
 {
     for (int y = 0; y < setting.imageSize.y; ++y)
     {
@@ -70,32 +71,7 @@ void TraceScene(const Scene& scene, const Settings& setting, const Camera& camer
 
                 Ray ray = GetRay(camera, u, v);
 
-                acumulatedColor += TracePath(ray, setting.maxBounces, scene);
-            }
-
-            acumulatedColor /= setting.samplesPerPixel;
-            imageBuffer[x + y * setting.imageSize.x] = acumulatedColor;
-        }
-    }
-}
-
-void TraceSceneBVH(const Scene& scene, const Settings& setting, const Camera& camera, glm::vec3* imageBuffer,
-                   const BVHTree& tree)
-{
-    for (int y = 0; y < setting.imageSize.y; ++y)
-    {
-        for (int x = 0; x < setting.imageSize.x; ++x)
-        {
-            glm::vec3 acumulatedColor(0.0f, 0.0f, 0.0f);
-
-            for (uint32_t i = 0; i < setting.samplesPerPixel; ++i)
-            {
-                float u = (float(x) + floatGenerator.Generate()) / setting.imageSize.x;
-                float v = (float(y) + floatGenerator.Generate()) / setting.imageSize.y;
-
-                Ray ray = GetRay(camera, u, v);
-
-                acumulatedColor += TracePathWithBVH(ray, setting.maxBounces, scene, tree);
+                acumulatedColor += TracePath(ray, setting.maxBounces, scene, tree);
             }
 
             acumulatedColor /= setting.samplesPerPixel;
@@ -118,30 +94,19 @@ int main(int /*argc*/, char** /*argv*/)
 
     // Prepare scene
     Scene scene;
-    constexpr uint32_t sphereCount = 1000;
+    constexpr uint32_t sphereCount = 200;
     GenerateRandomScene(scene, sphereCount);
 
     int bufferSize = sizeof(glm::vec3) * settings.imageSize.x * settings.imageSize.y;
     glm::vec3* imageBuffer = static_cast<glm::vec3*>(malloc(bufferSize));
 
+    BVHTree tree = BuildBVHTree(scene.spheresGeometry);
     {
-        TRACE_EXECUTION("TraceBrutteForce");
-        TraceScene(scene, settings, camera, imageBuffer);
+        TRACE_EXECUTION("TraceScene");
+        TraceScene(scene, settings, camera, imageBuffer, tree);
     }
 
     saveImageBufferToFile(settings.imageSize, imageBuffer, "output.png");
-
-    // BVH variant
-    memset(imageBuffer, 0, bufferSize);
-
-    // Build BVH
-    BVHTree tree = BuildBVHTree(scene.spheresGeometry);
-    {
-        TRACE_EXECUTION("TraceBVH");
-        TraceSceneBVH(scene, settings, camera, imageBuffer, tree);
-    }
-
-    saveImageBufferToFile(settings.imageSize, imageBuffer, "output_bvh.png");
 
     free(imageBuffer);
 
