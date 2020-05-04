@@ -13,7 +13,7 @@ struct HitResult
 {
     glm::vec3 position;
     glm::vec3 normal;
-    const struct Material* material;
+    size_t materialId;
 };
 
 #endif // RAY_H

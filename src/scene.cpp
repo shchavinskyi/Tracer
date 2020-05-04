@@ -17,10 +17,23 @@ glm::vec3 backgroundColor(const Ray& ray)
 }
 } // namespace
 
-void AddSphere(Scene& scene, Sphere&& sphere, Material&& material)
+void AddSphereAndMaterial(Scene& scene, const Sphere& sphere, const Material& material)
 {
-    scene.spheresGeometry.emplace_back(std::move(sphere));
-    scene.spheresMaterial.emplace_back(std::move(material));
+    scene.spheresGeometry.push_back(sphere);
+    scene.materials.push_back(material);
+    scene.spheresMaterial.push_back(scene.materials.size() - 1);
+}
+
+void AddSphere(Scene& scene, const Sphere& sphere, size_t materialId)
+{
+    scene.spheresGeometry.push_back(sphere);
+    scene.spheresMaterial.push_back(materialId);
+}
+
+size_t AddMaterial(Scene& scene, const Material& material)
+{
+    scene.materials.push_back(material);
+    return scene.materials.size() - 1;
 }
 
 void TraverseBVH(const Ray& ray, const BVHTree& tree, const BVHNode& node, std::vector<uint32_t>& objectIndexes)
@@ -144,7 +157,7 @@ glm::vec3 TracePath(const Ray& ray, int maxDepth, const Scene& scene, const BVHT
                     distanceToClosest = lenghtToIntersection;
                     hitResult.normal = intersectionNormal;
                     hitResult.position = intersectionPosition;
-                    hitResult.material = &scene.spheresMaterial[objectIndex];
+                    hitResult.materialId = scene.spheresMaterial[objectIndex];
                     isHit = true;
                 }
             }
@@ -156,7 +169,9 @@ glm::vec3 TracePath(const Ray& ray, int maxDepth, const Scene& scene, const BVHT
         Ray scattered;
         glm::vec3 attenuation;
 
-        if (scatter(ray, hitResult, attenuation, scattered))
+        const Material& material = scene.materials[hitResult.materialId];
+
+        if (scatter(ray, hitResult, material, attenuation, scattered))
             return attenuation * TracePath(scattered, maxDepth - 1, scene, tree);
 
         return glm::vec3(0.0f, 0.0f, 0.0f);

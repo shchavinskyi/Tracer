@@ -3,7 +3,8 @@
 #include "random.h"
 #include "ray.h"
 
-bool diffuse(const Ray& /*inRay*/, const HitResult& hitResult, glm::vec3& attenuation, Ray& scatteredRay)
+bool diffuse(const Ray& /*inRay*/, const HitResult& hitResult, const glm::vec3& albedo, glm::vec3& attenuation,
+             Ray& scatteredRay)
 {
     static RandomUnitVectorGenerator unitGenerator;
 
@@ -11,19 +12,20 @@ bool diffuse(const Ray& /*inRay*/, const HitResult& hitResult, glm::vec3& attenu
 
     scatteredRay.origin = hitResult.position;
     scatteredRay.direction = glm::normalize(target - hitResult.position);
-    attenuation = hitResult.material->albedo;
+    attenuation = albedo;
 
     return true;
 }
 
-bool metal(const Ray& inRay, const HitResult& hitResult, glm::vec3& attenuation, Ray& scatteredRay)
+bool metal(const Ray& inRay, const HitResult& hitResult, float fuzziness, const glm::vec3& albedo,
+           glm::vec3& attenuation, Ray& scatteredRay)
 {
     static RandomInUnitSphereGenerator generator;
 
     glm::vec3 reflected = glm::reflect(inRay.direction, hitResult.normal);
     scatteredRay.origin = hitResult.position;
-    scatteredRay.direction = glm::normalize(reflected + hitResult.material->fuzziness * generator.Generate());
-    attenuation = hitResult.material->albedo;
+    scatteredRay.direction = glm::normalize(reflected + fuzziness * generator.Generate());
+    attenuation = albedo;
     return glm::dot(reflected, hitResult.normal) > 0.0f;
 }
 
@@ -34,7 +36,8 @@ float schlick(float cosine, float refractIndex)
     return r0 + (1.0f - r0) * pow((1.0f - cosine), 5.0f);
 }
 
-bool dielectric(const Ray& inRay, const HitResult& hitResult, glm::vec3& attenuation, Ray& scatteredRay)
+bool dielectric(const Ray& inRay, const HitResult& hitResult, float fuzziness, const glm::vec3& albedo,
+                glm::vec3& attenuation, Ray& scatteredRay)
 {
     glm::vec3 normal = hitResult.normal;
     float refractIndex = 0.0f;
@@ -53,8 +56,8 @@ bool dielectric(const Ray& inRay, const HitResult& hitResult, glm::vec3& attenua
 
         glm::vec3 reflected = glm::reflect(inRay.direction, normal);
         scatteredRay.origin = hitResult.position;
-        scatteredRay.direction = glm::normalize(reflected + hitResult.material->fuzziness * generator.Generate());
-        attenuation = hitResult.material->albedo;
+        scatteredRay.direction = glm::normalize(reflected + fuzziness * generator.Generate());
+        attenuation = albedo;
         return glm::dot(reflected, normal) > 0.0f;
     }
 
@@ -65,8 +68,9 @@ bool dielectric(const Ray& inRay, const HitResult& hitResult, glm::vec3& attenua
     {
         glm::vec3 reflected = glm::reflect(inRay.direction, normal);
         scatteredRay.origin = hitResult.position;
-        scatteredRay.direction = glm::normalize(reflected + hitResult.material->fuzziness * generator.Generate());
-        attenuation = hitResult.material->albedo;
+        scatteredRay.direction = glm::normalize(reflected + fuzziness * generator.Generate());
+        attenuation = albedo;
+        ;
         return true;
     }
 
@@ -77,20 +81,19 @@ bool dielectric(const Ray& inRay, const HitResult& hitResult, glm::vec3& attenua
     return true;
 }
 
-bool scatter(const Ray& inRay, const HitResult& hitResult, glm::vec3& attenuation, Ray& scatteredRay)
+bool scatter(const Ray& inRay, const HitResult& hitResult, const Material& material, glm::vec3& attenuation,
+             Ray& scatteredRay)
 {
-    assert(hitResult.material != nullptr);
-
-    switch (hitResult.material->type)
+    switch (material.type)
     {
     case MaterialType::Diffuse:
-        return diffuse(inRay, hitResult, attenuation, scatteredRay);
+        return diffuse(inRay, hitResult, material.albedo, attenuation, scatteredRay);
 
     case MaterialType::Metal:
-        return metal(inRay, hitResult, attenuation, scatteredRay);
+        return metal(inRay, hitResult, material.fuzziness, material.albedo, attenuation, scatteredRay);
 
     case MaterialType::Dielectric:
-        return dielectric(inRay, hitResult, attenuation, scatteredRay);
+        return dielectric(inRay, hitResult, material.fuzziness, material.albedo, attenuation, scatteredRay);
     }
 
     return false;

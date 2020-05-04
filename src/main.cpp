@@ -20,24 +20,14 @@
 RandomFloatGenerator floatGenerator;
 RandomVectorGenerator colorGenerator(0.0f, 1.0f);
 
-void GenerateRandomScene(Scene& scene, uint32_t sphereCount)
+void GenerateRandomScene(Scene& scene, uint32_t sphereCount, uint32_t materialCount)
 {
-    AddSphere(scene, Sphere{glm::vec3(0.0f, 0.0f, -1000.0f), 1000.0f},
-              Material{MaterialType::Diffuse, glm::vec3(0.8f, 0.8f, 0.0f), 0.0f});
+    AddSphereAndMaterial(scene, Sphere{glm::vec3(0.0f, 0.0f, -1000.0f), 1000.0f},
+                         Material{MaterialType::Diffuse, glm::vec3(0.8f, 0.8f, 0.0f), 0.0f});
 
-    constexpr float width = 10.0f;
-    constexpr float minRadiuswidth = 0.05f;
-    constexpr float maxRadiuswidth = 0.25f;
-    constexpr float maxHeight = 3.0f;
-
-    for (uint32_t i = 0; i < sphereCount; ++i)
+    // Generate materials
+    for (uint32_t i = 1; i < materialCount; ++i)
     {
-        glm::vec3 position;
-        position.x = (floatGenerator.Generate() * width * 2.0f) - width;
-        position.y = (floatGenerator.Generate() * width * 2.0f) - width;
-        float radius = floatGenerator.Generate() * (maxRadiuswidth - minRadiuswidth) + minRadiuswidth;
-        position.z = glm::max(radius, floatGenerator.Generate() * maxHeight);
-
         glm::vec3 color = colorGenerator.Generate();
 
         float materialFactor = floatGenerator.Generate();
@@ -51,13 +41,33 @@ void GenerateRandomScene(Scene& scene, uint32_t sphereCount)
             randomMaterialType = MaterialType::Metal;
         }
 
-        AddSphere(scene, Sphere{position, radius}, Material{randomMaterialType, color, floatGenerator.Generate()});
+        AddMaterial(scene, Material{randomMaterialType, color, floatGenerator.Generate()});
+    }
+
+    constexpr float width = 4.0f;
+    constexpr float minRadiuswidth = 0.1f;
+    constexpr float maxRadiuswidth = 0.5f;
+    constexpr float maxHeight = 3.0f;
+
+    // Generate spheres
+    for (uint32_t i = 0; i < sphereCount - 1; ++i)
+    {
+        glm::vec3 position;
+        position.x = (floatGenerator.Generate() * width * 2.0f) - width;
+        position.y = (floatGenerator.Generate() * width * 2.0f) - width;
+        float radius = floatGenerator.Generate() * (maxRadiuswidth - minRadiuswidth) + minRadiuswidth;
+        position.z = glm::max(radius, floatGenerator.Generate() * maxHeight);
+
+        AddSphere(scene, Sphere{position, radius}, (rand() % (materialCount - 1)) + 1);
     }
 }
 
 void TraceScene(const Scene& scene, const Settings& setting, const Camera& camera, glm::vec3* imageBuffer,
                 const BVHTree& tree)
 {
+    int pixelsCount = setting.imageSize.x * setting.imageSize.y;
+    int progress = 0;
+
     for (int y = 0; y < setting.imageSize.y; ++y)
     {
         for (int x = 0; x < setting.imageSize.x; ++x)
@@ -75,16 +85,27 @@ void TraceScene(const Scene& scene, const Settings& setting, const Camera& camer
             }
 
             acumulatedColor /= setting.samplesPerPixel;
-            imageBuffer[x + y * setting.imageSize.x] = acumulatedColor;
+            int pixelIndex = x + y * setting.imageSize.x;
+            imageBuffer[pixelIndex] = acumulatedColor;
+
+            // Outpu pregress every 10 %
+            int percent = int(float(pixelIndex) / pixelsCount * 100);
+            if (percent % 10 == 0 && percent != progress)
+            {
+                progress = percent;
+                INFO("Tracing porgress %d", progress);
+            }
         }
     }
+
+    INFO("Tracing finshed");
 }
 
 int main(int /*argc*/, char** /*argv*/)
 {
     Settings settings = DefaultSettings();
 
-    glm::vec3 cameraPosition(-3.0f, 0.0f, 1.5f);
+    glm::vec3 cameraPosition(-5.0f, 0.0f, 1.5f);
     glm::vec3 at(0.0f, 0.0f, 1.5f);
     glm::vec3 up(0.0f, 0.0f, 1.0f);
 
@@ -94,8 +115,9 @@ int main(int /*argc*/, char** /*argv*/)
 
     // Prepare scene
     Scene scene;
-    constexpr uint32_t sphereCount = 200;
-    GenerateRandomScene(scene, sphereCount);
+    constexpr uint32_t sphereCount = 50;
+    constexpr uint32_t materialCount = 5;
+    GenerateRandomScene(scene, sphereCount, materialCount);
 
     int bufferSize = sizeof(glm::vec3) * settings.imageSize.x * settings.imageSize.y;
     glm::vec3* imageBuffer = static_cast<glm::vec3*>(malloc(bufferSize));
