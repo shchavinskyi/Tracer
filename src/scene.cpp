@@ -49,7 +49,7 @@ size_t AddMaterial(Scene& scene, const Material& material)
     return scene.materials.size() - 1;
 }
 
-glm::vec3 TracePath(const Ray& ray, int maxDepth, const Scene& scene, const BVHTree& tree)
+glm::vec3 TracePath(const Ray& ray, int maxDepth, const Scene& scene)
 {
     if (maxDepth <= 0)
     {
@@ -61,36 +61,30 @@ glm::vec3 TracePath(const Ray& ray, int maxDepth, const Scene& scene, const BVHT
 
     HitResult hitResult;
 
-    const BVHNode& rootNode = tree.nodes[0];
-    if (Hit(ray, rootNode.aabb))
+    // trace spheres
+    for (size_t i = 0; i < scene.spheresGeometry.size(); ++i)
     {
-        std::vector<uint32_t> objectIndexes;
+        const Sphere& sphere = scene.spheresGeometry[i];
 
-        TraverseBVH(ray, tree, rootNode, objectIndexes);
+        glm::vec3 intersectionPosition;
+        glm::vec3 intersectionNormal;
 
-        for (uint32_t& objectIndex : objectIndexes)
+        if (glm::intersectRaySphere(ray.origin, ray.direction, sphere.center, sphere.radius, intersectionPosition,
+                                    intersectionNormal))
         {
-            const Sphere& sphere = scene.spheresGeometry[objectIndex];
-
-            glm::vec3 intersectionPosition;
-            glm::vec3 intersectionNormal;
-
-            if (glm::intersectRaySphere(ray.origin, ray.direction, sphere.center, sphere.radius, intersectionPosition,
-                                        intersectionNormal))
+            const float lenghtToIntersection = glm::length(intersectionPosition - ray.origin);
+            if (lenghtToIntersection < distanceToClosest && lenghtToIntersection > 0.001f)
             {
-                const float lenghtToIntersection = glm::length(intersectionPosition - ray.origin);
-                if (lenghtToIntersection < distanceToClosest && lenghtToIntersection > 0.001f)
-                {
-                    distanceToClosest = lenghtToIntersection;
-                    hitResult.normal = intersectionNormal;
-                    hitResult.position = intersectionPosition;
-                    hitResult.materialId = scene.spheresMaterial[objectIndex];
-                    isHit = true;
-                }
+                distanceToClosest = lenghtToIntersection;
+                hitResult.normal = intersectionNormal;
+                hitResult.position = intersectionPosition;
+                hitResult.materialId = scene.spheresMaterial[i];
+                isHit = true;
             }
         }
     }
 
+    // trace triangles
     for (size_t i = 0; i < scene.trianglesGeometry.size(); ++i)
     {
         const Triangle& triangle = scene.trianglesGeometry[i];
@@ -124,7 +118,7 @@ glm::vec3 TracePath(const Ray& ray, int maxDepth, const Scene& scene, const BVHT
         const Material& material = scene.materials[hitResult.materialId];
 
         if (scatter(ray, hitResult, material, attenuation, scattered))
-            return attenuation * TracePath(scattered, maxDepth - 1, scene, tree);
+            return attenuation * TracePath(scattered, maxDepth - 1, scene);
 
         return glm::vec3(0.0f, 0.0f, 0.0f);
     }

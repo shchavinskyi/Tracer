@@ -15,6 +15,24 @@ struct Aabb
     glm::vec3 max;
 };
 
+struct BVHNode
+{
+    BVHNode()
+        : leftNodeIndex(0)
+        , rightNodeIndex(std::numeric_limits<uint32_t>::max())
+    {
+    }
+
+    Aabb aabb;
+    uint32_t leftNodeIndex;
+    uint32_t rightNodeIndex;
+};
+
+struct BVHTree
+{
+    std::vector<BVHNode> nodes;
+};
+
 inline bool Hit(const Ray& ray, const Aabb& aabb)
 {
     glm::vec3 invD{1.0f / ray.direction.x, 1.0f / ray.direction.y, 1.0f / ray.direction.z};
@@ -42,24 +60,6 @@ inline Aabb SurroundingAabb(const Aabb& box0, const Aabb& box1)
     glm::vec3 big(glm::max(box0.max.x, box1.max.x), glm::max(box0.max.y, box1.max.y), glm::max(box0.max.z, box1.max.z));
     return Aabb{small, big};
 }
-
-struct BVHNode
-{
-    BVHNode()
-        : leftNodeIndex(0)
-        , rightNodeIndex(std::numeric_limits<uint32_t>::max())
-    {
-    }
-
-    Aabb aabb;
-    uint32_t leftNodeIndex;
-    uint32_t rightNodeIndex;
-};
-
-struct BVHTree
-{
-    std::vector<BVHNode> nodes;
-};
 
 inline bool BoxCompare(const Sphere& left, const Sphere& right, int axis)
 {

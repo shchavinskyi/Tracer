@@ -30,6 +30,6 @@ void AddTriangleAndMaterial(Scene& scene, const Triangle& triangle, const Materi
 
 size_t AddMaterial(Scene& scene, const Material& material);
 
-glm::vec3 TracePath(const Ray& ray, int maxDepth, const Scene& scene, const BVHTree& tree);
+glm::vec3 TracePath(const Ray& ray, int maxDepth, const Scene& scene);
 
 #endif // SCENE_H

@@ -1,4 +1,3 @@
-#include "bvh.h"
 #include "camera.h"
 #include "logging.h"
 #include "material.h"
@@ -89,8 +88,7 @@ void GenerateRandomScene(Scene& scene, uint32_t sphereCount, uint32_t materialCo
     }
 }
 
-void TraceScene(const Scene& scene, const Settings& setting, const Camera& camera, glm::vec3* imageBuffer,
-                const BVHTree& tree)
+void TraceScene(const Scene& scene, const Settings& setting, const Camera& camera, glm::vec3* imageBuffer)
 {
     int pixelsCount = setting.imageSize.x * setting.imageSize.y;
     int progress = 0;
@@ -108,7 +106,7 @@ void TraceScene(const Scene& scene, const Settings& setting, const Camera& camer
 
                 Ray ray = GetRay(camera, u, v);
 
-                acumulatedColor += TracePath(ray, setting.maxBounces, scene, tree);
+                acumulatedColor += TracePath(ray, setting.maxBounces, scene);
             }
 
             acumulatedColor /= setting.samplesPerPixel;
@@ -149,10 +147,9 @@ int main(int /*argc*/, char** /*argv*/)
     int bufferSize = sizeof(glm::vec3) * settings.imageSize.x * settings.imageSize.y;
     glm::vec3* imageBuffer = static_cast<glm::vec3*>(malloc(bufferSize));
 
-    BVHTree tree = BuildBVHTree(scene.spheresGeometry);
     {
         TRACE_EXECUTION("TraceScene");
-        TraceScene(scene, settings, camera, imageBuffer, tree);
+        TraceScene(scene, settings, camera, imageBuffer);
     }
 
     saveImageBufferToFile(settings.imageSize, imageBuffer, "output.png");
