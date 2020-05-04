@@ -2,8 +2,8 @@
 #include "camera.h"
 #include "logging.h"
 #include "material.h"
+#include "objects.h"
 #include "random.h"
-#include "ray.h"
 #include "save.h"
 #include "scene.h"
 #include "settings.h"
@@ -22,11 +22,38 @@ RandomVectorGenerator colorGenerator(0.0f, 1.0f);
 
 void GenerateRandomScene(Scene& scene, uint32_t sphereCount, uint32_t materialCount)
 {
-    AddSphereAndMaterial(scene, Sphere{glm::vec3(0.0f, 0.0f, -1000.0f), 1000.0f},
-                         Material{MaterialType::Diffuse, glm::vec3(0.8f, 0.8f, 0.0f), 0.0f});
+    size_t matId = AddMaterial(scene, Material{MaterialType::Diffuse, glm::vec3(0.8f, 0.8f, 0.0f), 0.0f});
+    float rectWidth = 8.0f;
+    AddTriangle(scene,
+                Triangle{glm::vec3(-1.0f * rectWidth, -1.0f * rectWidth, 0.0f),
+                         glm::vec3(1.0f * rectWidth, -1.0f * rectWidth, 0.0f),
+                         glm::vec3(-1.0f * rectWidth, 1.0f * rectWidth, 0.0f)},
+                matId);
+
+    AddTriangle(scene,
+                Triangle{glm::vec3(1.0f * rectWidth, -1.0f * rectWidth, 0.0f),
+                         glm::vec3(1.0f * rectWidth, 1.0f * rectWidth, 0.0f),
+                         glm::vec3(-1.0f * rectWidth, 1.0f * rectWidth, 0.0f)},
+                matId);
+
+    matId = AddMaterial(scene, Material{MaterialType::Metal, glm::vec3(0.9f, 1.0f, 1.0f), 0.01f});
+    float rectWidth2 = 6.0f;
+    AddTriangle(scene,
+                Triangle{glm::vec3(rectWidth, -1.0f * rectWidth2, 0.0f),
+                         glm::vec3(rectWidth, -1.0f * rectWidth2, 1.0f * rectWidth2),
+                         glm::vec3(rectWidth, 1.0f * rectWidth2, 0.0f)},
+                matId);
+
+    AddTriangle(scene,
+                Triangle{glm::vec3(rectWidth, -1.0f * rectWidth2, 1.0f * rectWidth2),
+                         glm::vec3(rectWidth, 1.0f * rectWidth2, 1.0f * rectWidth2),
+                         glm::vec3(rectWidth, 1.0f * rectWidth2, 0.0f)},
+                matId);
+
+    size_t fixedMaterials = scene.materials.size();
 
     // Generate materials
-    for (uint32_t i = 1; i < materialCount; ++i)
+    for (uint32_t i = 0; i < materialCount - fixedMaterials; ++i)
     {
         glm::vec3 color = colorGenerator.Generate();
 
@@ -47,7 +74,7 @@ void GenerateRandomScene(Scene& scene, uint32_t sphereCount, uint32_t materialCo
     constexpr float width = 4.0f;
     constexpr float minRadiuswidth = 0.1f;
     constexpr float maxRadiuswidth = 0.5f;
-    constexpr float maxHeight = 3.0f;
+    // constexpr float maxHeight = 3.0f;
 
     // Generate spheres
     for (uint32_t i = 0; i < sphereCount - 1; ++i)
@@ -56,9 +83,9 @@ void GenerateRandomScene(Scene& scene, uint32_t sphereCount, uint32_t materialCo
         position.x = (floatGenerator.Generate() * width * 2.0f) - width;
         position.y = (floatGenerator.Generate() * width * 2.0f) - width;
         float radius = floatGenerator.Generate() * (maxRadiuswidth - minRadiuswidth) + minRadiuswidth;
-        position.z = glm::max(radius, floatGenerator.Generate() * maxHeight);
+        position.z = radius; // glm::max(radius, floatGenerator.Generate() * maxHeight);
 
-        AddSphere(scene, Sphere{position, radius}, (rand() % (materialCount - 1)) + 1);
+        AddSphere(scene, Sphere{position, radius}, (rand() % (materialCount - fixedMaterials)) + fixedMaterials);
     }
 }
 
@@ -105,8 +132,8 @@ int main(int /*argc*/, char** /*argv*/)
 {
     Settings settings = DefaultSettings();
 
-    glm::vec3 cameraPosition(-5.0f, 0.0f, 1.5f);
-    glm::vec3 at(0.0f, 0.0f, 1.5f);
+    glm::vec3 cameraPosition(-6.0f, 0.0f, 2.5f);
+    glm::vec3 at(0.0f, 0.0f, 0.5f);
     glm::vec3 up(0.0f, 0.0f, 1.0f);
 
     const float aspectRatio = float(settings.imageSize.x) / settings.imageSize.y;
@@ -115,8 +142,8 @@ int main(int /*argc*/, char** /*argv*/)
 
     // Prepare scene
     Scene scene;
-    constexpr uint32_t sphereCount = 50;
-    constexpr uint32_t materialCount = 5;
+    constexpr uint32_t sphereCount = 20;
+    constexpr uint32_t materialCount = 10;
     GenerateRandomScene(scene, sphereCount, materialCount);
 
     int bufferSize = sizeof(glm::vec3) * settings.imageSize.x * settings.imageSize.y;

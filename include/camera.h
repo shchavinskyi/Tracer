@@ -1,7 +1,7 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
-#include "ray.h"
+#include "objects.h"
 
 #include <glm/glm.hpp>
 #include <glm/vec3.hpp>

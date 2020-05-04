@@ -2,7 +2,7 @@
 #define BVH_H
 
 #include "logging.h"
-#include "ray.h"
+#include "objects.h"
 #include "scene.h"
 
 #include <algorithm>
@@ -78,5 +78,7 @@ inline bool BoxZCompare(const Sphere& left, const Sphere& right) { return BoxCom
 BVHNode CreateNode(BVHTree& tree, std::vector<Sphere>& spheres, std::uint32_t start, std::uint32_t end);
 
 BVHTree BuildBVHTree(std::vector<Sphere>& spheres);
+
+void TraverseBVH(const Ray& ray, const BVHTree& tree, const BVHNode& node, std::vector<uint32_t>& objectIndexes);
 
 #endif // BVH_H

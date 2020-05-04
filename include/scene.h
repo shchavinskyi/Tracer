@@ -13,12 +13,20 @@ struct Scene
 {
     std::vector<Sphere> spheresGeometry;
     std::vector<size_t> spheresMaterial;
+
+    std::vector<Triangle> trianglesGeometry;
+    std::vector<size_t> trianglesMaterial;
+
     std::vector<Material> materials;
 };
 
+void AddSphere(Scene& scene, const Sphere& sphere, size_t materialId);
+
 void AddSphereAndMaterial(Scene& scene, const Sphere& sphere, const Material& material);
 
-void AddSphere(Scene& scene, const Sphere& sphere, size_t materialId);
+void AddTriangle(Scene& scene, const Triangle& triangle, size_t materialId);
+
+void AddTriangleAndMaterial(Scene& scene, const Triangle& triangle, const Material& material);
 
 size_t AddMaterial(Scene& scene, const Material& material);
 

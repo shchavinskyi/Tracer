@@ -1,7 +1,7 @@
 #include "material.h"
 
+#include "objects.h"
 #include "random.h"
-#include "ray.h"
 
 bool diffuse(const Ray& /*inRay*/, const HitResult& hitResult, const glm::vec3& albedo, glm::vec3& attenuation,
              Ray& scatteredRay)

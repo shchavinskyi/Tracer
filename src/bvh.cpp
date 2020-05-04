@@ -52,3 +52,25 @@ BVHTree BuildBVHTree(std::vector<Sphere>& spheres)
 
     return tree;
 }
+
+void TraverseBVH(const Ray& ray, const BVHTree& tree, const BVHNode& node, std::vector<uint32_t>& objectIndexes)
+{
+    if (node.leftNodeIndex == node.rightNodeIndex)
+    {
+        // Hit last aabb
+        objectIndexes.push_back(node.leftNodeIndex);
+        return;
+    }
+
+    const BVHNode& leftNode = tree.nodes[node.leftNodeIndex];
+    const BVHNode& rightNode = tree.nodes[node.rightNodeIndex];
+
+    if (Hit(ray, leftNode.aabb))
+    {
+        TraverseBVH(ray, tree, leftNode, objectIndexes);
+    }
+    if (Hit(ray, rightNode.aabb))
+    {
+        TraverseBVH(ray, tree, rightNode, objectIndexes);
+    }
+}
