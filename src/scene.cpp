@@ -1,13 +1,15 @@
 #include "scene.h"
 
-#include "bvh.h"
-#include "objects.h"
+#include "logging.h"
+#include "random.h"
 
 #include <glm/gtx/intersect.hpp>
 #include <set>
 #include <vector>
 
 namespace {
+RandomFloatGenerator floatGenerator;
+
 glm::vec3 backgroundColor(const Ray& ray)
 {
     return glm::vec3(0.0f, 0.0f, 0.0f);
@@ -165,4 +167,43 @@ glm::vec3 TracePath(const Ray& ray, int maxDepth, const Scene& scene)
     }
 
     return backgroundColor(ray);
+}
+
+void TraceScene(const Scene& scene, glm::vec3* imageBuffer)
+{
+    int pixelsCount = scene.settings.imageSize.x * scene.settings.imageSize.y;
+    int progress = 0;
+
+    for (int y = 0; y < scene.settings.imageSize.y; ++y)
+    {
+        for (int x = 0; x < scene.settings.imageSize.x; ++x)
+        {
+            glm::vec3 acumulatedColor(0.0f, 0.0f, 0.0f);
+
+            for (uint32_t i = 0; i < scene.settings.samplesPerPixel; ++i)
+            {
+                float u = (float(x) + floatGenerator.Generate()) / scene.settings.imageSize.x;
+                float v = (float(y) + floatGenerator.Generate()) / scene.settings.imageSize.y;
+
+                Ray ray = GetRay(scene.camera, u, v);
+
+                acumulatedColor += TracePath(ray, scene.settings.maxBounces, scene);
+            }
+
+            acumulatedColor /= scene.settings.samplesPerPixel;
+            int pixelIndex = x + y * scene.settings.imageSize.x;
+            imageBuffer[pixelIndex] = glm::clamp(acumulatedColor, 0.0f, 1.0f);
+
+            // Outpu pregress every n %
+            constexpr int progresDiv = 10;
+            int percent = int(float(pixelIndex) / pixelsCount * 100);
+            if (percent % progresDiv == 0 && percent != progress)
+            {
+                progress = percent;
+                INFO("Tracing porgress %d", progress);
+            }
+        }
+    }
+
+    INFO("Tracing finshed");
 }

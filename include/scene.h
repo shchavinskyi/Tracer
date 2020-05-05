@@ -1,8 +1,10 @@
 #ifndef SCENE_H
 #define SCENE_H
 
+#include "camera.h"
 #include "material.h"
 #include "objects.h"
+#include "settings.h"
 
 #include <glm/vec3.hpp>
 #include <vector>
@@ -11,6 +13,9 @@ struct BVHTree;
 
 struct Scene
 {
+    Settings settings;
+    Camera camera;
+
     std::vector<Sphere> spheresGeometry;
     std::vector<size_t> spheresMaterial;
 
@@ -35,5 +40,7 @@ void AddYZRect(Scene& scene, const glm::vec3& a, const glm::vec3& b, size_t mate
 size_t AddMaterial(Scene& scene, const Material& material);
 
 glm::vec3 TracePath(const Ray& ray, int maxDepth, const Scene& scene);
+
+void TraceScene(const Scene& scene, glm::vec3* imageBuffer);
 
 #endif // SCENE_H
