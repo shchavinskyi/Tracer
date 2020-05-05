@@ -10,10 +10,13 @@
 namespace {
 glm::vec3 backgroundColor(const Ray& ray)
 {
+    return glm::vec3(0.0f, 0.0f, 0.0f);
+    /*
     float t = 0.5f * (ray.direction.z + 1.0f);
     const glm::vec3 top{0.5f, 0.7f, 1.0f};
     const glm::vec3 bottom(1.0f, 1.0f, 1.0f);
     return (1.0f - t) * top + t * bottom;
+    */
 }
 } // namespace
 
@@ -40,6 +43,40 @@ void AddSphere(Scene& scene, const Sphere& sphere, size_t materialId)
 void AddTriangle(Scene& scene, const Triangle& triangle, size_t materialId)
 {
     scene.trianglesGeometry.push_back(triangle);
+    scene.trianglesMaterial.push_back(materialId);
+}
+
+void AddXYRect(Scene& scene, const glm::vec3& a, const glm::vec3& b, size_t materialId, bool flip /* = false*/)
+{
+    assert(a.z == b.z);
+
+    scene.trianglesGeometry.emplace_back(flip ? Triangle{a, glm::vec3(a.x, b.y, a.z), b}
+                                              : Triangle{a, b, glm::vec3(a.x, b.y, a.z)});
+    scene.trianglesGeometry.emplace_back(flip ? Triangle{b, glm::vec3(b.x, a.y, a.z), a}
+                                              : Triangle{b, a, glm::vec3(b.x, a.y, a.z)});
+    scene.trianglesMaterial.push_back(materialId);
+    scene.trianglesMaterial.push_back(materialId);
+}
+
+void AddXZRect(Scene& scene, const glm::vec3& a, const glm::vec3& b, size_t materialId, bool flip /* = false*/)
+{
+    assert(a.y == b.y);
+
+    scene.trianglesGeometry.emplace_back(Triangle{a, b, glm::vec3(a.x, a.y, b.z)});
+    scene.trianglesGeometry.emplace_back(Triangle{b, a, glm::vec3(b.x, a.y, a.z)});
+    scene.trianglesMaterial.push_back(materialId);
+    scene.trianglesMaterial.push_back(materialId);
+}
+
+void AddYZRect(Scene& scene, const glm::vec3& a, const glm::vec3& b, size_t materialId, bool flip /* = false*/)
+{
+    assert(a.x == b.x);
+
+    scene.trianglesGeometry.emplace_back(flip ? Triangle{a, glm::vec3(a.x, a.y, b.z), b}
+                                              : Triangle{a, b, glm::vec3(a.x, a.y, b.z)});
+    scene.trianglesGeometry.emplace_back(flip ? Triangle{b, glm::vec3(a.x, b.y, a.z), a}
+                                              : Triangle{b, a, glm::vec3(a.x, b.y, a.z)});
+    scene.trianglesMaterial.push_back(materialId);
     scene.trianglesMaterial.push_back(materialId);
 }
 
@@ -117,7 +154,11 @@ glm::vec3 TracePath(const Ray& ray, int maxDepth, const Scene& scene)
 
         const Material& material = scene.materials[hitResult.materialId];
 
-        if (scatter(ray, hitResult, material, attenuation, scattered))
+        if (material.type == MaterialType::Light)
+        {
+            return material.albedo;
+        }
+        else if (Scatter(ray, hitResult, material, attenuation, scattered))
             return attenuation * TracePath(scattered, maxDepth - 1, scene);
 
         return glm::vec3(0.0f, 0.0f, 0.0f);

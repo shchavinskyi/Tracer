@@ -28,6 +28,10 @@ void AddTriangle(Scene& scene, const Triangle& triangle, size_t materialId);
 
 void AddTriangleAndMaterial(Scene& scene, const Triangle& triangle, const Material& material);
 
+void AddXYRect(Scene& scene, const glm::vec3& a, const glm::vec3& b, size_t materialId, bool flip = false);
+void AddXZRect(Scene& scene, const glm::vec3& a, const glm::vec3& b, size_t materialId, bool flip = false);
+void AddYZRect(Scene& scene, const glm::vec3& a, const glm::vec3& b, size_t materialId, bool flip = false);
+
 size_t AddMaterial(Scene& scene, const Material& material);
 
 glm::vec3 TracePath(const Ray& ray, int maxDepth, const Scene& scene);

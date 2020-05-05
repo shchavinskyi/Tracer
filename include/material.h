@@ -10,7 +10,8 @@ enum class MaterialType
 {
     Diffuse,
     Metal,
-    Dielectric
+    Dielectric,
+    Light
 };
 
 struct Material
@@ -20,7 +21,7 @@ struct Material
     float fuzziness; // TODO refactor material data
 };
 
-bool scatter(const Ray& inRay, const HitResult& hitResult, const Material& material, glm::vec3& attenuation,
+bool Scatter(const Ray& inRay, const HitResult& hitResult, const Material& material, glm::vec3& attenuation,
              Ray& scatteredRay);
 
 #endif // MATERIAL_H

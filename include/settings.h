@@ -10,6 +10,6 @@ struct Settings
     uint32_t maxBounces;
 };
 
-inline Settings DefaultSettings() { return Settings{{600, 300}, 20, 10}; }
+inline Settings DefaultSettings() { return Settings{{400, 400}, 100, 10}; }
 
 #endif // SETTINGS_H

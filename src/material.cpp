@@ -70,7 +70,6 @@ bool dielectric(const Ray& inRay, const HitResult& hitResult, float fuzziness, c
         scatteredRay.origin = hitResult.position;
         scatteredRay.direction = glm::normalize(reflected + fuzziness * generator.Generate());
         attenuation = albedo;
-        ;
         return true;
     }
 
@@ -81,7 +80,7 @@ bool dielectric(const Ray& inRay, const HitResult& hitResult, float fuzziness, c
     return true;
 }
 
-bool scatter(const Ray& inRay, const HitResult& hitResult, const Material& material, glm::vec3& attenuation,
+bool Scatter(const Ray& inRay, const HitResult& hitResult, const Material& material, glm::vec3& attenuation,
              Ray& scatteredRay)
 {
     switch (material.type)
