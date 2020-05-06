@@ -3,6 +3,9 @@
 #include "logging.h"
 #include "random.h"
 
+#include <chrono>
+#include <deque>
+#include <future>
 #include <glm/gtx/intersect.hpp>
 #include <set>
 #include <vector>
@@ -169,41 +172,125 @@ glm::vec3 TracePath(const Ray& ray, int maxDepth, const Scene& scene)
     return backgroundColor(ray);
 }
 
-void TraceScene(const Scene& scene, glm::vec3* imageBuffer)
+void RenderScene(const Scene& scene, RenderBuffer& renderBuffer)
 {
-    int pixelsCount = scene.settings.imageSize.x * scene.settings.imageSize.y;
-    int progress = 0;
+    uint32_t pixelsCount = scene.settings.imageSize.x * scene.settings.imageSize.y;
+    uint32_t bufferLastIndex = renderBuffer.start + renderBuffer.length;
 
-    for (int y = 0; y < scene.settings.imageSize.y; ++y)
+    assert(renderBuffer.start >= 0 && bufferLastIndex <= pixelsCount);
+
+    for (uint32_t i = renderBuffer.start; i < bufferLastIndex; ++i)
     {
-        for (int x = 0; x < scene.settings.imageSize.x; ++x)
+        uint32_t x = i % scene.settings.imageSize.y;
+        uint32_t y = i / scene.settings.imageSize.y;
+
+        glm::vec3 acumulatedColor(0.0f, 0.0f, 0.0f);
+
+        for (uint32_t i = 0; i < scene.settings.samplesPerPixel; ++i)
         {
-            glm::vec3 acumulatedColor(0.0f, 0.0f, 0.0f);
+            float u = (float(x) + floatGenerator.Generate()) / scene.settings.imageSize.x;
+            float v = (float(y) + floatGenerator.Generate()) / scene.settings.imageSize.y;
 
-            for (uint32_t i = 0; i < scene.settings.samplesPerPixel; ++i)
+            Ray ray = GetRay(scene.camera, u, v);
+
+            acumulatedColor += TracePath(ray, scene.settings.maxBounces, scene);
+        }
+
+        acumulatedColor /= scene.settings.samplesPerPixel;
+        renderBuffer.buffer[x + y * scene.settings.imageSize.x] = glm::clamp(acumulatedColor, 0.0f, 1.0f);
+    }
+}
+
+void RenderSceneMT(const Scene& scene, RenderBuffer& renderBuffer, uint32_t threadCount)
+{
+    // 0 threads / 1 async
+#if 1
+    uint32_t pixelCountPerTask = 256;
+
+    uint32_t taskCount =
+        renderBuffer.length / pixelCountPerTask + (renderBuffer.length % pixelCountPerTask == 0 ? 0 : 1);
+
+    INFO("%d Pixels splitted to %d tasks", renderBuffer.length, taskCount);
+
+    std::deque<std::future<void>> futures;
+
+    uint32_t availableThreads = threadCount;
+    uint32_t availableTasks = taskCount;
+    uint32_t progress = 0;
+
+    while (availableTasks > 0)
+    {
+
+        while (availableThreads > 0 && availableTasks > 0)
+        {
+            uint32_t nextTaskIndex = taskCount - availableTasks;
+
+            if (availableTasks > 1)
             {
-                float u = (float(x) + floatGenerator.Generate()) / scene.settings.imageSize.x;
-                float v = (float(y) + floatGenerator.Generate()) / scene.settings.imageSize.y;
-
-                Ray ray = GetRay(scene.camera, u, v);
-
-                acumulatedColor += TracePath(ray, scene.settings.maxBounces, scene);
+                futures.emplace_back(std::async(
+                    std::launch::async, RenderScene, scene,
+                    RenderBuffer{renderBuffer.buffer, nextTaskIndex * pixelCountPerTask, pixelCountPerTask}));
+            }
+            else
+            {
+                uint32_t pixelsLeft = renderBuffer.length - nextTaskIndex * pixelCountPerTask;
+                futures.emplace_back(
+                    std::async(std::launch::async, RenderScene, scene,
+                               RenderBuffer{renderBuffer.buffer, nextTaskIndex * pixelCountPerTask, pixelsLeft}));
             }
 
-            acumulatedColor /= scene.settings.samplesPerPixel;
-            int pixelIndex = x + y * scene.settings.imageSize.x;
-            imageBuffer[pixelIndex] = glm::clamp(acumulatedColor, 0.0f, 1.0f);
+            --availableTasks;
+            --availableThreads;
+        }
 
-            // Outpu pregress every n %
-            constexpr int progresDiv = 10;
-            int percent = int(float(pixelIndex) / pixelsCount * 100);
-            if (percent % progresDiv == 0 && percent != progress)
+        assert(futures.size() == threadCount);
+        assert(availableThreads == 0);
+
+        while (availableThreads <= 0 && availableTasks > 0)
+        {
+            std::this_thread::sleep_for(std::chrono::microseconds(1));
+
+            for (auto it = futures.begin(); it != futures.end();)
             {
-                progress = percent;
-                INFO("Tracing porgress %d", progress);
+                if (std::future_status::ready == it->wait_for(std::chrono::nanoseconds(1)))
+                {
+                    it = futures.erase(it);
+                    availableThreads++;
+                }
+                else
+                {
+                    ++it;
+                }
             }
+        }
+
+        // INFO("And loop %d %d ", availableThreads, availableTasks);
+
+        constexpr uint32_t progresDiv = 10;
+        uint32_t percent = uint32_t(float(taskCount - availableTasks) / taskCount * 100);
+        if (percent % progresDiv == 0 && percent != progress)
+        {
+            progress = percent;
+            INFO("Tracing porgress %d", progress);
         }
     }
 
-    INFO("Tracing finshed");
+#else
+
+    uint32_t pixelCountPerThread = renderBuffer.length / threadCount;
+
+    std::vector<std::thread> threads;
+    threads.reserve(threadCount);
+
+    for (unsigned int i = 0; i < threadCount; ++i)
+    {
+        threads.emplace_back(std::thread(
+            RenderScene, scene, RenderBuffer{renderBuffer.buffer, pixelCountPerThread * i, pixelCountPerThread}));
+    }
+
+    for (unsigned int i = 0; i < threadCount; ++i)
+    {
+        threads[i].join();
+    }
+#endif
 }

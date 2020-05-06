@@ -4,6 +4,7 @@
 #include "utils.h"
 
 #include <glm/vec3.hpp>
+#include <thread>
 
 int main(int /*argc*/, char** /*argv*/)
 {
@@ -17,17 +18,23 @@ int main(int /*argc*/, char** /*argv*/)
 
     CornellBox(scene);
 
-    int bufferSize = sizeof(glm::vec3) * scene.settings.imageSize.x * scene.settings.imageSize.y;
-    glm::vec3* imageBuffer = static_cast<glm::vec3*>(malloc(bufferSize));
+    RenderBuffer imageBuffer;
+    imageBuffer.start = 0;
+    imageBuffer.length = scene.settings.imageSize.x * scene.settings.imageSize.y;
+    imageBuffer.buffer = static_cast<glm::vec3*>(malloc(sizeof(glm::vec3) * imageBuffer.length));
 
     {
         TRACE_EXECUTION("TraceScene");
-        TraceScene(scene, imageBuffer);
+
+        unsigned int threadCount = std::thread::hardware_concurrency();
+        INFO("[ %d ] hardware concurrent threads are supported.", threadCount);
+
+        RenderSceneMT(scene, imageBuffer, threadCount);
     }
 
-    saveImageBufferToFile(scene.settings.imageSize, imageBuffer, "output.png");
+    saveImageBufferToFile(scene.settings.imageSize, imageBuffer.buffer, "output.png");
 
-    free(imageBuffer);
+    free(imageBuffer.buffer);
 
     return 0;
 }

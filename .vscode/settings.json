@@ -67,7 +67,9 @@
         "xstddef": "cpp",
         "xtr1common": "cpp",
         "stack": "cpp",
-        "deque": "cpp"
+        "deque": "cpp",
+        "condition_variable": "cpp",
+        "future": "cpp"
     },
     "editor.tabSize": 4,
     "editor.insertSpaces": true,
