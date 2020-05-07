@@ -20,10 +20,10 @@ if [ $# -eq 1 ]; then
 fi
 
 for c in $CONFIGS; do
-    cmake -S "$ROOT" -B "$ROOT/build" -DBUILD_TESTS=ON -DCMAKE_BUILD_TYPE=$c
+    cmake -H"$ROOT" -B"$ROOT/build" -DBUILD_TESTS=ON -DCMAKE_BUILD_TYPE=$c
     cmake --build "$ROOT/build" --config $c
 done
 
-ls -la bin/*/*
-
 set +x
+
+ls -la bin/*/*
