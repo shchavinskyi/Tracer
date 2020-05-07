@@ -1,5 +1,5 @@
-#ifndef _RANDOM_H_
-#define _RANDOM_H_
+#ifndef RANDOM_H_
+#define RANDOM_H_
 
 #include <glm/geometric.hpp>
 #include <glm/vec3.hpp>
@@ -76,7 +76,7 @@ private:
 class RandomUnitVectorInHemisphereGenerator
 {
 public:
-    RandomUnitVectorInHemisphereGenerator(){};
+    RandomUnitVectorInHemisphereGenerator() {}
 
     glm::vec3 GenerateFor(const glm::vec3& normal)
     {
@@ -91,4 +91,4 @@ private:
     RandomInUnitSphereGenerator generator;
 };
 
-#endif // _RANDOM_H_
+#endif // RANDOM_H_

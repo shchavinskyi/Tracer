@@ -2,6 +2,7 @@
 #ifndef LOGGER_H
 #define LOGGER_H
 
+#include <array>
 #include <chrono>
 #include <ctime>
 #include <iostream>
@@ -22,20 +23,9 @@ enum class LogLevel : uint8_t
     ERROR
 };
 
-struct EnumHasher
-{
-    template <typename T>
-    std::size_t operator()(T t) const
-    {
-        return static_cast<std::size_t>(t);
-    }
-};
-
-const std::unordered_map<LogLevel, std::string, EnumHasher> colored{{LogLevel::ERROR, " \x1b[31;1m[ERROR]\x1b[0m "},
-                                                                    {LogLevel::WARN, " \x1b[33;1m[WARN]\x1b[0m "},
-                                                                    {LogLevel::INFO, " \x1b[32;1m[INFO]\x1b[0m "},
-                                                                    {LogLevel::DEBUG, " \x1b[34;1m[DEBUG]\x1b[0m "},
-                                                                    {LogLevel::TRACE, " \x1b[37;1m[TRACE]\x1b[0m "}};
+constexpr std::array<const char*, 5> levelStrings = {" \x1b[37;1m[TRACE]\x1b[0m ", " \x1b[34;1m[DEBUG]\x1b[0m ",
+                                                     " \x1b[32;1m[INFO]\x1b[0m ", " \x1b[33;1m[WARN]\x1b[0m ",
+                                                     " \x1b[31;1m[ERROR]\x1b[0m "};
 
 // All, something in between, none or default to info
 #if defined(LOGGING_LEVEL_ALL) || defined(LOGGING_LEVEL_TRACE)
@@ -87,10 +77,7 @@ inline std::string GetTimestamp()
 class Logger
 {
 public:
-    Logger()
-        : levels(colored)
-    {
-    }
+    Logger() {}
 
     template <typename... Args>
     void Log(const LogLevel level, const std::string& message, Args... args)
@@ -104,17 +91,14 @@ public:
         char buffer[maxLogLength] = {'\0'};
 
         int len = sprintf_s(buffer, maxLogLength - 2, format.c_str(), GetTimestamp().c_str(),
-                            levels.find(level)->second.c_str(), args...);
+                            levelStrings[static_cast<std::size_t>(level)], args...);
 
         buffer[len] = '\n';
         buffer[len + 1] = '\0';
 
         std::cout << buffer;
         std::cout.flush();
-    };
-
-private:
-    const std::unordered_map<LogLevel, std::string, EnumHasher> levels;
+    }
 };
 
 inline Logger& GetLogger()
@@ -164,8 +148,8 @@ inline void ERROR(const std::string& message, Args... args)
 class ExecutionLogger
 {
 private:
-    std::chrono::high_resolution_clock::time_point start;
     std::string message;
+    std::chrono::high_resolution_clock::time_point start;
 
 public:
     ExecutionLogger(const std::string& inMessage)

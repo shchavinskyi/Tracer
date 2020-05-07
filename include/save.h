@@ -1,9 +1,11 @@
-#ifndef _SAVE_
-#define _SAVE_
+#ifndef SAVE_H
+#define SAVE_H
 
 #include <glm/fwd.hpp>
 #include <string>
 
-void SaveImageBufferToFile(glm::vec3* buffer, const glm::ivec2& size, const std::string& filename);
+struct ImageSize;
 
-#endif // _SAVE_
+void SaveImageBufferToFile(glm::vec3* buffer, const ImageSize& size, const std::string& filename);
+
+#endif // SAVE_H

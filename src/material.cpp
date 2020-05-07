@@ -3,6 +3,8 @@
 #include "objects.h"
 #include "random.h"
 
+namespace {
+
 bool diffuse(const Ray& /*inRay*/, const HitResult& hitResult, const glm::vec3& albedo, glm::vec3& attenuation,
              Ray& scatteredRay)
 {
@@ -80,6 +82,8 @@ bool dielectric(const Ray& inRay, const HitResult& hitResult, float fuzziness, c
     return true;
 }
 
+} // namespace
+
 bool Scatter(const Ray& inRay, const HitResult& hitResult, const Material& material, glm::vec3& attenuation,
              Ray& scatteredRay)
 {
@@ -93,7 +97,7 @@ bool Scatter(const Ray& inRay, const HitResult& hitResult, const Material& mater
 
     case MaterialType::Dielectric:
         return dielectric(inRay, hitResult, material.fuzziness, material.albedo, attenuation, scatteredRay);
+    case MaterialType::Light:
+        return false;
     }
-
-    return false;
 }

@@ -11,9 +11,8 @@
 #include <vector>
 
 namespace {
-RandomFloatGenerator floatGenerator;
 
-glm::vec3 backgroundColor(const Ray& ray)
+glm::vec3 backgroundColor(const Ray& /*ray*/)
 {
     return glm::vec3(0.0f, 0.0f, 0.0f);
     /*
@@ -23,6 +22,7 @@ glm::vec3 backgroundColor(const Ray& ray)
     return (1.0f - t) * top + t * bottom;
     */
 }
+
 } // namespace
 
 void AddSphereAndMaterial(Scene& scene, const Sphere& sphere, const Material& material)
@@ -53,8 +53,6 @@ void AddTriangle(Scene& scene, const Triangle& triangle, size_t materialId)
 
 void AddXYRect(Scene& scene, const glm::vec3& a, const glm::vec3& b, size_t materialId, bool flip /* = false*/)
 {
-    assert(a.z == b.z);
-
     scene.trianglesGeometry.emplace_back(flip ? Triangle{a, glm::vec3(a.x, b.y, a.z), b}
                                               : Triangle{a, b, glm::vec3(a.x, b.y, a.z)});
     scene.trianglesGeometry.emplace_back(flip ? Triangle{b, glm::vec3(b.x, a.y, a.z), a}
@@ -65,18 +63,16 @@ void AddXYRect(Scene& scene, const glm::vec3& a, const glm::vec3& b, size_t mate
 
 void AddXZRect(Scene& scene, const glm::vec3& a, const glm::vec3& b, size_t materialId, bool flip /* = false*/)
 {
-    assert(a.y == b.y);
-
-    scene.trianglesGeometry.emplace_back(Triangle{a, b, glm::vec3(a.x, a.y, b.z)});
-    scene.trianglesGeometry.emplace_back(Triangle{b, a, glm::vec3(b.x, a.y, a.z)});
+    scene.trianglesGeometry.emplace_back(flip ? Triangle{a, glm::vec3(a.x, a.y, b.z), b}
+                                              : Triangle{a, b, glm::vec3(a.x, a.y, b.z)});
+    scene.trianglesGeometry.emplace_back(flip ? Triangle{b, glm::vec3(b.x, a.y, a.z), a}
+                                              : Triangle{b, a, glm::vec3(b.x, a.y, a.z)});
     scene.trianglesMaterial.push_back(materialId);
     scene.trianglesMaterial.push_back(materialId);
 }
 
 void AddYZRect(Scene& scene, const glm::vec3& a, const glm::vec3& b, size_t materialId, bool flip /* = false*/)
 {
-    assert(a.x == b.x);
-
     scene.trianglesGeometry.emplace_back(flip ? Triangle{a, glm::vec3(a.x, a.y, b.z), b}
                                               : Triangle{a, b, glm::vec3(a.x, a.y, b.z)});
     scene.trianglesGeometry.emplace_back(flip ? Triangle{b, glm::vec3(a.x, b.y, a.z), a}
@@ -91,9 +87,9 @@ size_t AddMaterial(Scene& scene, const Material& material)
     return scene.materials.size() - 1;
 }
 
-glm::vec3 TracePath(const Ray& ray, int maxDepth, const Scene& scene)
+glm::vec3 TracePath(const Ray& ray, uint32_t maxDepth, const Scene& scene)
 {
-    if (maxDepth <= 0)
+    if (maxDepth == 0)
     {
         return glm::vec3(0, 0, 0);
     }
@@ -174,22 +170,55 @@ glm::vec3 TracePath(const Ray& ray, int maxDepth, const Scene& scene)
 
 void RenderScene(const Scene& scene, RenderBuffer& renderBuffer)
 {
-    uint32_t pixelsCount = scene.settings.imageSize.x * scene.settings.imageSize.y;
+    RandomFloatGenerator floatGenerator;
+
     uint32_t bufferLastIndex = renderBuffer.start + renderBuffer.length;
 
-    assert(renderBuffer.start >= 0 && bufferLastIndex <= pixelsCount);
+    assert(renderBuffer.start >= 0 &&
+           bufferLastIndex <= scene.settings.imageSize.width * scene.settings.imageSize.height);
 
     for (uint32_t i = renderBuffer.start; i < bufferLastIndex; ++i)
     {
-        uint32_t x = i % scene.settings.imageSize.y;
-        uint32_t y = i / scene.settings.imageSize.y;
+        uint32_t x = i % scene.settings.imageSize.height;
+        uint32_t y = i / scene.settings.imageSize.height;
 
         glm::vec3 acumulatedColor(0.0f, 0.0f, 0.0f);
 
-        for (uint32_t i = 0; i < scene.settings.samplesPerPixel; ++i)
+        for (uint32_t j = 0; j < scene.settings.samplesPerPixel; ++j)
         {
-            float u = (float(x) + floatGenerator.Generate()) / scene.settings.imageSize.x;
-            float v = (float(y) + floatGenerator.Generate()) / scene.settings.imageSize.y;
+            float u = (float(x) + floatGenerator.Generate()) / float(scene.settings.imageSize.width);
+            float v = (float(y) + floatGenerator.Generate()) / float(scene.settings.imageSize.height);
+
+            Ray ray = GetRay(scene.camera, u, v);
+
+            acumulatedColor += TracePath(ray, scene.settings.maxBounces, scene);
+        }
+
+        acumulatedColor /= scene.settings.samplesPerPixel;
+        renderBuffer.buffer[i] = glm::clamp(acumulatedColor, 0.0f, 1.0f);
+    }
+}
+
+void RenderSceneMove(const Scene& scene, RenderBuffer&& renderBuffer)
+{
+    RandomFloatGenerator floatGenerator;
+
+    uint32_t bufferLastIndex = renderBuffer.start + renderBuffer.length;
+
+    assert(renderBuffer.start >= 0 &&
+           bufferLastIndex <= scene.settings.imageSize.width * scene.settings.imageSize.height);
+
+    for (uint32_t i = renderBuffer.start; i < bufferLastIndex; ++i)
+    {
+        uint32_t x = i % scene.settings.imageSize.height;
+        uint32_t y = i / scene.settings.imageSize.height;
+
+        glm::vec3 acumulatedColor(0.0f, 0.0f, 0.0f);
+
+        for (uint32_t j = 0; j < scene.settings.samplesPerPixel; ++j)
+        {
+            float u = (float(x) + floatGenerator.Generate()) / float(scene.settings.imageSize.width);
+            float v = (float(y) + floatGenerator.Generate()) / float(scene.settings.imageSize.height);
 
             Ray ray = GetRay(scene.camera, u, v);
 
@@ -228,14 +257,14 @@ void RenderSceneMT(const Scene& scene, RenderBuffer& renderBuffer, uint32_t thre
             if (availableTasks > 1)
             {
                 futures.emplace_back(std::async(
-                    std::launch::async, RenderScene, scene,
+                    std::launch::async, RenderSceneMove, std::ref(scene),
                     RenderBuffer{renderBuffer.buffer, nextTaskIndex * pixelCountPerTask, pixelCountPerTask}));
             }
             else
             {
                 uint32_t pixelsLeft = renderBuffer.length - nextTaskIndex * pixelCountPerTask;
                 futures.emplace_back(
-                    std::async(std::launch::async, RenderScene, scene,
+                    std::async(std::launch::async, RenderSceneMove, std::ref(scene),
                                RenderBuffer{renderBuffer.buffer, nextTaskIndex * pixelCountPerTask, pixelsLeft}));
             }
 
@@ -264,10 +293,8 @@ void RenderSceneMT(const Scene& scene, RenderBuffer& renderBuffer, uint32_t thre
             }
         }
 
-        // INFO("And loop %d %d ", availableThreads, availableTasks);
-
         constexpr uint32_t progresDiv = 10;
-        uint32_t percent = uint32_t(float(taskCount - availableTasks) / taskCount * 100);
+        uint32_t percent = uint32_t(float(taskCount - availableTasks) / float(taskCount) * 100);
         if (percent % progresDiv == 0 && percent != progress)
         {
             progress = percent;

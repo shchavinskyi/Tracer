@@ -1,13 +1,27 @@
 #include "save.h"
 
 #include "logging.h"
+#include "settings.h"
 
-#include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 #include <string>
 
+#pragma clang diagnostic push
+
+#pragma clang diagnostic ignored "-Wold-style-cast"
+#pragma clang diagnostic ignored "-Wreserved-id-macro"
+#pragma clang diagnostic ignored "-Wsign-conversion"
+#pragma clang diagnostic ignored "-Wzero-as-null-pointer-constant"
+#pragma clang diagnostic ignored "-Wimplicit-fallthrough"
+#pragma clang diagnostic ignored "-Wcast-qual"
+#pragma clang diagnostic ignored "-Wmissing-prototypes"
+#pragma clang diagnostic ignored "-Wextra-semi-stmt"
+#pragma clang diagnostic ignored "-Wimplicit-int-conversion"
+
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb_image_write.h>
+
+#pragma clang diagnostic pop
 
 struct Color
 {
@@ -16,14 +30,14 @@ struct Color
     uint8_t b;
 };
 
-void SaveImageBufferToFile(glm::vec3* renderBuffer, const glm::ivec2& size, const std::string& filename)
+void SaveImageBufferToFile(glm::vec3* renderBuffer, const ImageSize& size, const std::string& filename)
 {
-    Color* outputBuffer = static_cast<Color*>(malloc(sizeof(Color) * size.x * size.y));
+    Color* outputBuffer = static_cast<Color*>(malloc(sizeof(Color) * size.width * size.height));
 
-    for (int y = 0; y < size.y; ++y)
-        for (int x = 0; x < size.x; ++x)
+    for (uint32_t y = 0; y < size.height; ++y)
+        for (uint32_t x = 0; x < size.width; ++x)
         {
-            const int index = x + y * size.x;
+            const uint32_t index = x + y * size.width;
             glm::vec3& color = renderBuffer[index];
             Color& outputTexel = outputBuffer[index];
 
@@ -33,10 +47,10 @@ void SaveImageBufferToFile(glm::vec3* renderBuffer, const glm::ivec2& size, cons
         }
 
     constexpr int numberOfChenels = 3; /* rgb */
-    int result =
-        stbi_write_png(filename.c_str(), size.x, size.y, numberOfChenels, outputBuffer, size.x * numberOfChenels);
+    int result = stbi_write_png(filename.c_str(), int(size.width), int(size.height), numberOfChenels, outputBuffer,
+                                int(size.width * numberOfChenels));
 
-    INFO("Image successfully save to file : %s ", filename.c_str());
+    INFO("Image successfully save to file : %s with result %d", filename.c_str(), result);
 
     free(outputBuffer);
 }

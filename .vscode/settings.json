@@ -76,4 +76,6 @@
     "editor.detectIndentation": false,
     "editor.formatOnSave": true,
     "cmake.configureOnOpen": true,
+    "files.insertFinalNewline": true,
+    "files.trimFinalNewlines": true
 }

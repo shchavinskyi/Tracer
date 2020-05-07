@@ -39,9 +39,10 @@ void AddYZRect(Scene& scene, const glm::vec3& a, const glm::vec3& b, size_t mate
 
 size_t AddMaterial(Scene& scene, const Material& material);
 
-glm::vec3 TracePath(const Ray& ray, int maxDepth, const Scene& scene);
+glm::vec3 TracePath(const Ray& ray, uint32_t maxDepth, const Scene& scene);
 
 void RenderScene(const Scene& scene, RenderBuffer& renderBuffer);
+void RenderSceneMove(const Scene& scene, RenderBuffer&& renderBuffer);
 void RenderSceneMT(const Scene& scene, RenderBuffer& renderBuffer, uint32_t threadCount);
 
 #endif // SCENE_H

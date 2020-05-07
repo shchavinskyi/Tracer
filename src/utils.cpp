@@ -4,17 +4,19 @@
 #include "scene.h"
 
 namespace {
-RandomFloatGenerator floatGenerator;
-RandomVectorGenerator colorGenerator(0.0f, 1.0f);
+float AspectRatio(const ImageSize& size) { return float(size.width) / float(size.height); }
 } // namespace
 
-void GenerateRandomScene(Scene& scene, uint32_t sphereCount, uint32_t materialCount)
+void GenerateRandomScene(Scene& scene, size_t sphereCount, size_t materialCount)
 {
+    RandomFloatGenerator floatGenerator;
+    RandomVectorGenerator colorGenerator(0.0f, 1.0f);
+
     glm::vec3 cameraPosition(-6.0f, 0.0f, 2.5f);
     glm::vec3 at(0.0f, 0.0f, 0.5f);
     glm::vec3 up(0.0f, 0.0f, 1.0f);
 
-    const float aspectRatio = float(scene.settings.imageSize.x) / scene.settings.imageSize.y;
+    const float aspectRatio = AspectRatio(scene.settings.imageSize);
     const float fov = 45.0f;
     scene.camera = CameraFromView(cameraPosition, at, up, fov, aspectRatio);
 
@@ -52,7 +54,7 @@ void GenerateRandomScene(Scene& scene, uint32_t sphereCount, uint32_t materialCo
     size_t fixedMaterials = scene.materials.size();
 
     // Generate materials
-    for (uint32_t i = 0; i < materialCount - fixedMaterials; ++i)
+    for (size_t i = 0; i < materialCount - fixedMaterials; ++i)
     {
         glm::vec3 color = colorGenerator.Generate();
 
@@ -84,7 +86,8 @@ void GenerateRandomScene(Scene& scene, uint32_t sphereCount, uint32_t materialCo
         float radius = floatGenerator.Generate() * (maxRadiuswidth - minRadiuswidth) + minRadiuswidth;
         position.z = radius; // glm::max(radius, floatGenerator.Generate() * maxHeight);
 
-        AddSphere(scene, Sphere{position, radius}, (rand() % (materialCount - fixedMaterials)) + fixedMaterials);
+        AddSphere(scene, Sphere{position, radius},
+                  static_cast<size_t>(rand() % int(materialCount - fixedMaterials)) + fixedMaterials);
     }
 }
 
@@ -97,7 +100,7 @@ void CornellBox(Scene& scene)
     glm::vec3 at(boxHalfWidth, 0.0f, boxHalfWidth);
     glm::vec3 up(0.0f, 0.0f, 1.0f);
 
-    const float aspectRatio = float(scene.settings.imageSize.x) / scene.settings.imageSize.y;
+    const float aspectRatio = AspectRatio(scene.settings.imageSize);
     const float fov = 40.0f;
     scene.camera = CameraFromView(cameraPosition, at, up, fov, aspectRatio);
 

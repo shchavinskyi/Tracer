@@ -1,9 +1,7 @@
 #include "random.h"
 
 #include <chrono>
-
-#define _USE_MATH_DEFINES
-#include <math.h>
+#include <glm/gtc/constants.hpp>
 
 using std::chrono::system_clock;
 
@@ -31,7 +29,7 @@ RandomVectorGenerator::RandomVectorGenerator(float min, float max)
 }
 
 RandomUnitVectorGenerator::RandomUnitVectorGenerator()
-    : aGenerator(0.0f, 2.0f * float(M_PI))
+    : aGenerator(0.0f, 2.0f * glm::pi<float>())
     , zGenerator(-1.0f, 1.0f)
 {
 }
