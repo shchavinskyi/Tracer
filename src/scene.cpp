@@ -197,7 +197,7 @@ void RenderScene(const Scene& scene, RenderBuffer& renderBuffer)
         }
 
         acumulatedColor /= scene.settings.samplesPerPixel;
-        renderBuffer.buffer[x + y * scene.settings.imageSize.x] = glm::clamp(acumulatedColor, 0.0f, 1.0f);
+        renderBuffer.buffer[i] = glm::clamp(acumulatedColor, 0.0f, 1.0f);
     }
 }
 

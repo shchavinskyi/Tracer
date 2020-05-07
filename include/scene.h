@@ -41,13 +41,6 @@ size_t AddMaterial(Scene& scene, const Material& material);
 
 glm::vec3 TracePath(const Ray& ray, int maxDepth, const Scene& scene);
 
-struct RenderBuffer
-{
-    glm::vec3* buffer;
-    uint32_t start;
-    uint32_t length;
-};
-
 void RenderScene(const Scene& scene, RenderBuffer& renderBuffer);
 void RenderSceneMT(const Scene& scene, RenderBuffer& renderBuffer, uint32_t threadCount);
 

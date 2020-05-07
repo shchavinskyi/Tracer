@@ -29,4 +29,11 @@ struct HitResult
     size_t materialId;
 };
 
+struct RenderBuffer
+{
+    glm::vec3* buffer;
+    uint32_t start;
+    uint32_t length;
+};
+
 #endif // OBJECTS_H

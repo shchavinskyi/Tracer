@@ -12,10 +12,6 @@ int main(int /*argc*/, char** /*argv*/)
     Scene scene;
     scene.settings = DefaultSettings();
 
-    /*constexpr uint32_t sphereCount = 20;
-    constexpr uint32_t materialCount = 10;
-    GenerateRandomScene(scene, camera, settings, sphereCount, materialCount);*/
-
     CornellBox(scene);
 
     RenderBuffer imageBuffer;
@@ -32,7 +28,7 @@ int main(int /*argc*/, char** /*argv*/)
         RenderSceneMT(scene, imageBuffer, threadCount);
     }
 
-    saveImageBufferToFile(scene.settings.imageSize, imageBuffer.buffer, "output.png");
+    SaveImageBufferToFile(imageBuffer.buffer, scene.settings.imageSize, "output.png");
 
     free(imageBuffer.buffer);
 

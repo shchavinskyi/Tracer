@@ -16,7 +16,7 @@ struct Color
     uint8_t b;
 };
 
-void saveImageBufferToFile(const glm::ivec2& size, glm::vec3* renderBuffer, const std::string& filename)
+void SaveImageBufferToFile(glm::vec3* renderBuffer, const glm::ivec2& size, const std::string& filename)
 {
     Color* outputBuffer = static_cast<Color*>(malloc(sizeof(Color) * size.x * size.y));
 
