@@ -70,7 +70,12 @@ inline std::string GetTimestamp()
     std::time_t tt = system_clock::to_time_t(tp);
 
     tm newtime;
+
+#ifdef _MSC_VER
     localtime_s(&newtime, &tt);
+#else
+    localtime_s(&tt, &newtime);
+#endif
 
     strftime(timestamp.data(), timestamp.size(), "%d/%m/%y %H:%M:%S", &newtime);
 

@@ -4,7 +4,7 @@ add_executable(${EXECUTABLE_NAME} main.cpp)
 # Add source files
 file(GLOB_RECURSE SOURCE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 
-list(REMOVE_ITEM ${SOURCE_FILES} main.cpp)
+list(REMOVE_ITEM SOURCE_FILES main.cpp)
 
 # A library for tests
 add_library(${LIB_NAME} ${SOURCE_FILES})
