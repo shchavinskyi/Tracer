@@ -97,7 +97,7 @@ glm::vec3 TracePath(const Ray& ray, uint32_t maxDepth, const Scene& scene)
     bool isHit = false;
     float distanceToClosest = std::numeric_limits<float>::max();
 
-    HitResult hitResult;
+    HitResult hitResult{glm::vec3(0.0f), glm::vec3(0.0f), 0};
 
     // trace spheres
     for (size_t i = 0; i < scene.spheresGeometry.size(); ++i)
