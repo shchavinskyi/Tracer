@@ -26,4 +26,10 @@ done
 
 set +x
 
-ls -la bin/*/*
+if  [ -x "$(ls -la bin/*/*)" ]; then
+    ls -la bin/*/*
+else
+    ls -la bin/*
+fi
+
+

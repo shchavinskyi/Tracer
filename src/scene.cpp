@@ -174,8 +174,7 @@ void RenderScene(const Scene& scene, RenderBuffer& renderBuffer)
 
     uint32_t bufferLastIndex = renderBuffer.start + renderBuffer.length;
 
-    assert(renderBuffer.start >= 0 &&
-           bufferLastIndex <= scene.settings.imageSize.width * scene.settings.imageSize.height);
+    assert(bufferLastIndex <= scene.settings.imageSize.width * scene.settings.imageSize.height);
 
     for (uint32_t i = renderBuffer.start; i < bufferLastIndex; ++i)
     {
@@ -205,8 +204,7 @@ void RenderSceneMove(const Scene& scene, RenderBuffer&& renderBuffer)
 
     uint32_t bufferLastIndex = renderBuffer.start + renderBuffer.length;
 
-    assert(renderBuffer.start >= 0 &&
-           bufferLastIndex <= scene.settings.imageSize.width * scene.settings.imageSize.height);
+    assert(bufferLastIndex <= scene.settings.imageSize.width * scene.settings.imageSize.height);
 
     for (uint32_t i = renderBuffer.start; i < bufferLastIndex; ++i)
     {

@@ -64,7 +64,7 @@ inline std::string GetTimestamp()
 #ifdef _MSC_VER
     localtime_s(&newtime, &tt);
 #else
-    localtime_s(&tt, &newtime);
+    localtime_r(&tt, &newtime);
 #endif
 
     strftime(timestamp.data(), timestamp.size(), "%d/%m/%y %H:%M:%S", &newtime);
@@ -90,8 +90,8 @@ public:
         constexpr size_t maxLogLength = 256;
         char buffer[maxLogLength] = {'\0'};
 
-        int len = sprintf_s(buffer, maxLogLength - 2, format.c_str(), GetTimestamp().c_str(),
-                            levelStrings[static_cast<std::size_t>(level)], args...);
+        int len = sprintf(buffer, format.c_str(), GetTimestamp().c_str(), levelStrings[static_cast<std::size_t>(level)],
+                          args...);
 
         buffer[len] = '\n';
         buffer[len + 1] = '\0';

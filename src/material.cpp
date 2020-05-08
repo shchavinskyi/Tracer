@@ -97,7 +97,10 @@ bool Scatter(const Ray& inRay, const HitResult& hitResult, const Material& mater
 
     case MaterialType::Dielectric:
         return dielectric(inRay, hitResult, material.fuzziness, material.albedo, attenuation, scatteredRay);
+
     case MaterialType::Light:
         return false;
     }
+
+    return false;
 }

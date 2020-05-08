@@ -5,7 +5,7 @@
 
 struct Scene;
 
-void GenerateRandomScene(Scene& scene, size_t sphereCount, size_t materialCount);
+void GenerateRandomScene(Scene& scene, std::size_t sphereCount, std::size_t materialCount);
 
 void CornellBox(Scene& scene);
 

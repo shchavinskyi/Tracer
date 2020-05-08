@@ -6,8 +6,9 @@
 #include <glm/vec3.hpp>
 #include <string>
 
-#pragma clang diagnostic push
+#ifdef __clang__
 
+#pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wold-style-cast"
 #pragma clang diagnostic ignored "-Wreserved-id-macro"
 #pragma clang diagnostic ignored "-Wsign-conversion"
@@ -18,10 +19,16 @@
 #pragma clang diagnostic ignored "-Wextra-semi-stmt"
 #pragma clang diagnostic ignored "-Wimplicit-int-conversion"
 
+#endif
+
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb_image_write.h>
 
+#ifdef __clang__
+
 #pragma clang diagnostic pop
+
+#endif
 
 struct Color
 {
