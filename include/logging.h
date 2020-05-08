@@ -12,8 +12,6 @@
 
 namespace Logging {
 
-#define LOGGING_LEVEL_ALL
-
 enum class LogLevel : uint8_t
 {
     TRACE,
@@ -23,9 +21,11 @@ enum class LogLevel : uint8_t
     ERROR
 };
 
-constexpr std::array<const char*, 5> levelStrings = {" \x1b[37;1m[TRACE]\x1b[0m ", " \x1b[34;1m[DEBUG]\x1b[0m ",
-                                                     " \x1b[32;1m[INFO]\x1b[0m ", " \x1b[33;1m[WARN]\x1b[0m ",
-                                                     " \x1b[31;1m[ERROR]\x1b[0m "};
+constexpr std::array<const char*, 5> levelStrings = {{" \x1b[37;1m[TRACE]\x1b[0m ", " \x1b[34;1m[DEBUG]\x1b[0m ",
+                                                      " \x1b[32;1m[INFO]\x1b[0m ", " \x1b[33;1m[WARN]\x1b[0m ",
+                                                      " \x1b[31;1m[ERROR]\x1b[0m "}};
+
+#define LOGGING_LEVEL_ALL
 
 // All, something in between, none or default to info
 #if defined(LOGGING_LEVEL_ALL) || defined(LOGGING_LEVEL_TRACE)
@@ -51,7 +51,6 @@ inline std::string GetTimestamp()
     constexpr size_t fractionLenght = 5;
 
     timestamp.resize(timestampLenght - fractionLenght);
-    timestamp.reserve(timestampLenght);
 
     system_clock::time_point tp = system_clock::now();
 
@@ -67,7 +66,7 @@ inline std::string GetTimestamp()
     localtime_r(&tt, &newtime);
 #endif
 
-    strftime(timestamp.data(), timestamp.size(), "%d/%m/%y %H:%M:%S", &newtime);
+    strftime(&timestamp.front(), timestamp.size(), "%d/%m/%y %H:%M:%S", &newtime);
 
     timestamp.append(std::to_string(fractionalMS));
 
@@ -82,16 +81,25 @@ public:
     template <typename... Args>
     void Log(const LogLevel level, const std::string& message, Args... args)
     {
+#if !defined(LOGGING_LEVEL_ALL) && !defined(LOGGING_LEVEL_TRACE)
+        // Cut off only if needed
         if (level < LOG_LEVEL_CUTOFF)
             return;
+#endif
+
         std::string format("%s%s");
         format.append(message);
 
         constexpr size_t maxLogLength = 256;
         char buffer[maxLogLength] = {'\0'};
 
+#ifdef _MSC_VER
+        int len = sprintf_s(buffer, maxLogLength - 2, format.c_str(), GetTimestamp().c_str(),
+                            levelStrings[static_cast<std::size_t>(level)], args...);
+#else
         int len = sprintf(buffer, format.c_str(), GetTimestamp().c_str(), levelStrings[static_cast<std::size_t>(level)],
                           args...);
+#endif
 
         buffer[len] = '\n';
         buffer[len + 1] = '\0';
