@@ -2,7 +2,7 @@
 
 #include "logging.h"
 #include "objects.h"
-#include "settings.h"
+#include "scene.h"
 
 #include <glm/vec3.hpp>
 #include <string>

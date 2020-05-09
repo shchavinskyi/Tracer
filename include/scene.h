@@ -4,17 +4,31 @@
 #include "camera.h"
 #include "material.h"
 #include "objects.h"
-#include "settings.h"
 
 #include <glm/vec3.hpp>
 #include <vector>
 
-struct BVHTree;
+struct ImageSize
+{
+    uint32_t width;
+    uint32_t height;
+};
+
+struct Settings
+{
+    ImageSize imageSize;
+    uint32_t samplesPerPixel;
+    uint32_t maxBounces;
+};
+
+inline Settings DefaultSettings() { return Settings{{400, 400}, 250, 10}; }
 
 struct Scene
 {
     Settings settings;
     Camera camera;
+
+    glm::vec3 backgroundColor;
 
     std::vector<Sphere> spheresGeometry;
     std::vector<uint32_t> spheresMaterial;
@@ -38,11 +52,5 @@ void AddXZRect(Scene& scene, const glm::vec3& a, const glm::vec3& b, uint32_t ma
 void AddYZRect(Scene& scene, const glm::vec3& a, const glm::vec3& b, uint32_t materialId, bool flip = false);
 
 uint32_t AddMaterial(Scene& scene, const Material& material);
-
-glm::vec3 TracePath(const Ray& ray, uint32_t maxDepth, const Scene& scene);
-
-void RenderScene(const Scene& scene, RenderBuffer renderBuffer);
-
-void RenderSceneMT(const Scene& scene, RenderBuffer& renderBuffer, uint32_t threadCount);
 
 #endif // SCENE_H

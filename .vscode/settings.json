@@ -69,7 +69,8 @@
         "stack": "cpp",
         "deque": "cpp",
         "condition_variable": "cpp",
-        "future": "cpp"
+        "future": "cpp",
+        "resumable": "cpp"
     },
     "editor.tabSize": 4,
     "editor.insertSpaces": true,
@@ -79,11 +80,27 @@
     "cmake.copyCompileCommands": "${workspaceFolder}/compile_commands.json",
     "files.insertFinalNewline": true,
     "files.trimFinalNewlines": true,
+    "clang-tidy.lintOnSave": true,
     "clang-tidy.checks": [
-        "clang-analyzer",
-        "cppcoreguidelines",
-        "llvm",
-        "google",
-        "-clang-diagnostic-unused-macros"
+        "clang-analyzer-*",
+        "cppcoreguidelines-*",
+        "-cppcoreguidelines-avoid-magic-numbers",
+        "-cppcoreguidelines-pro-bounds-constant-array-index",
+        "-cppcoreguidelines-pro-type-vararg",
+        "-cppcoreguidelines-macro-usage",
+        "-cppcoreguidelines-no-malloc",
+        "-cppcoreguidelines-owning-memory",
+        "-cppcoreguidelines-pro-type-union-access",
+        "llvm-*",
+        "-llvm-header-guard",
+        "-clang-diagnostic-unused-macros",
+        "modernize-*",
+        "-modernize-use-trailing-return-type",
+        "-modernize-use-auto",
+        "readability-*",
+        "-readability-uppercase-literal-suffix",
+        "-readability-magic-numbers",
+        "performance-*",
+        "portability-*"
     ]
 }

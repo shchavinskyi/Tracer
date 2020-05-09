@@ -23,7 +23,7 @@ private:
 class RandomVectorGenerator
 {
 public:
-    RandomVectorGenerator();
+    RandomVectorGenerator() = default;
     RandomVectorGenerator(float min, float max);
 
     glm::vec3 Generate()
@@ -64,7 +64,9 @@ public:
         {
             glm::vec3 p = vectorGenerator.Generate();
             if (glm::length(p) >= 1.0f)
+            {
                 continue;
+            }
             return p;
         }
     }
@@ -76,15 +78,19 @@ private:
 class RandomUnitVectorInHemisphereGenerator
 {
 public:
-    RandomUnitVectorInHemisphereGenerator() {}
+    RandomUnitVectorInHemisphereGenerator() = default;
 
     glm::vec3 GenerateFor(const glm::vec3& normal)
     {
         glm::vec3 inUnitSphere = generator.Generate();
         if (glm::dot(inUnitSphere, normal) > 0.0f)
+        {
             return inUnitSphere;
+        }
         else
+        {
             return -inUnitSphere;
+        }
     }
 
 private:

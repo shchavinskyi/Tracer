@@ -21,8 +21,6 @@ RandomFloatGenerator::RandomFloatGenerator(float inMin, float inMax)
 {
 }
 
-RandomVectorGenerator::RandomVectorGenerator() {}
-
 RandomVectorGenerator::RandomVectorGenerator(float min, float max)
     : floatGenerator(min, max)
 {

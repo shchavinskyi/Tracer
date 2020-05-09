@@ -23,12 +23,12 @@ BVHNode CreateNode(BVHTree& tree, std::vector<Sphere>& spheres, std::uint32_t st
         auto mid = start + objectSpan / 2;
 
         result.leftNodeIndex = static_cast<uint32_t>(tree.nodes.size());
-        tree.nodes.push_back(BVHNode{});
+        tree.nodes.emplace_back(BVHNode{});
         BVHNode& leftNode = tree.nodes[result.leftNodeIndex];
         leftNode = CreateNode(tree, spheres, start, mid);
 
         result.rightNodeIndex = static_cast<uint32_t>(tree.nodes.size());
-        tree.nodes.push_back(BVHNode{});
+        tree.nodes.emplace_back(BVHNode{});
         BVHNode& rightNode = tree.nodes[result.rightNodeIndex];
         rightNode = CreateNode(tree, spheres, mid, end);
 
@@ -46,7 +46,7 @@ BVHTree BuildBVHTree(std::vector<Sphere>& spheres)
     BVHTree tree;
 
     tree.nodes.reserve(spheres.size() * 2 + 1);
-    tree.nodes.push_back(BVHNode{});
+    tree.nodes.emplace_back(BVHNode{});
     BVHNode& rootNode = tree.nodes[0];
     rootNode = CreateNode(tree, spheres, 0, static_cast<uint32_t>(spheres.size()));
 

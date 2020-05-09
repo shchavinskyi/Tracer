@@ -56,7 +56,7 @@ inline std::string GetTimestamp()
     std::size_t fractionalMS = ms.count() % 1000;
     std::time_t tt = system_clock::to_time_t(tp);
 
-    tm newtime;
+    tm newtime{};
 
 #ifdef _MSC_VER
     localtime_s(&newtime, &tt);
@@ -74,8 +74,6 @@ inline std::string GetTimestamp()
 class Logger
 {
 public:
-    Logger() {}
-
     template <typename... Args>
     void Log(const LogLevel level, const std::string& message, Args... args)
     {
@@ -89,20 +87,21 @@ public:
         format.append(message);
 
         constexpr size_t maxLogLength = 256;
-        char buffer[maxLogLength] = {'\0'};
+        std::array<char, maxLogLength> buffer = {'\0'};
 
 #ifdef _MSC_VER
-        int len = sprintf_s(buffer, maxLogLength - 2, format.c_str(), GetTimestamp().c_str(),
+        int len = sprintf_s(&buffer.front(), maxLogLength - 2, format.c_str(), GetTimestamp().c_str(),
                             levelStrings[static_cast<std::size_t>(level)], args...);
 #else
         int len = sprintf(buffer, format.c_str(), GetTimestamp().c_str(), levelStrings[static_cast<std::size_t>(level)],
                           args...);
 #endif
 
-        buffer[len] = '\n';
-        buffer[len + 1] = '\0';
+        auto lastIndex = static_cast<std::array<char, maxLogLength>::size_type>(len);
+        buffer[lastIndex] = '\n';
+        buffer[lastIndex + 1] = '\0';
 
-        std::cout << buffer;
+        std::cout << &buffer.front();
         std::cout.flush();
     }
 };
@@ -116,37 +115,37 @@ inline Logger& GetLogger()
 } // namespace Logging
 
 template <typename... Args>
-inline void Log(const Logging::LogLevel level, const std::string& message, Args... args)
+inline void Log(const Logging::LogLevel level, std::string&& message, Args... args)
 {
     Logging::GetLogger().Log(level, message, args...);
 }
 
 template <typename... Args>
-inline void TRACE(const std::string& message, Args... args)
+inline void TRACE(std::string&& message, Args... args)
 {
     Logging::GetLogger().Log(Logging::LogLevel::TRACE, message, args...);
 }
 
 template <typename... Args>
-inline void DEBUG(const std::string& message, Args... args)
+inline void DEBUG(std::string&& message, Args... args)
 {
     Logging::GetLogger().Log(Logging::LogLevel::DEBUG, message, args...);
 }
 
 template <typename... Args>
-inline void INFO(const std::string& message, Args... args)
+inline void INFO(std::string&& message, Args... args)
 {
     Logging::GetLogger().Log(Logging::LogLevel::INFO, message, args...);
 }
 
 template <typename... Args>
-inline void WARN(const std::string& message, Args... args)
+inline void WARN(std::string&& message, Args... args)
 {
     Logging::GetLogger().Log(Logging::LogLevel::WARN, message, args...);
 }
 
 template <typename... Args>
-inline void ERROR(const std::string& message, Args... args)
+inline void ERROR(std::string&& message, Args... args)
 {
     Logging::GetLogger().Log(Logging::LogLevel::ERROR, message, args...);
 }
@@ -158,11 +157,17 @@ private:
     std::chrono::high_resolution_clock::time_point start;
 
 public:
-    ExecutionLogger(const std::string& inMessage)
-        : message(inMessage)
+    ExecutionLogger(const ExecutionLogger&) = delete;
+    ExecutionLogger& operator=(const ExecutionLogger&) = delete;
+    ExecutionLogger(ExecutionLogger&&) = delete;
+    ExecutionLogger& operator=(ExecutionLogger&&) = delete;
+
+    ExecutionLogger(std::string&& inMessage)
+        : message(std::move(inMessage))
         , start(std::chrono::high_resolution_clock::now())
     {
     }
+
     ~ExecutionLogger()
     {
         using namespace std::chrono;

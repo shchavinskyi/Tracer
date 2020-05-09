@@ -1,24 +1,20 @@
 #include "logging.h"
-#include "objects.h"
+#include "render.h"
 #include "save.h"
 #include "scene.h"
 #include "utils.h"
 
-#include <glm/vec3.hpp>
 #include <thread>
 
 int main(int /*argc*/, char** /*argv*/)
 {
-    // Prepare scene
     Scene scene;
     scene.settings = DefaultSettings();
 
+    // Generate Cornell Box
     CornellBox(scene);
 
-    RenderBuffer imageBuffer;
-    imageBuffer.start = 0;
-    imageBuffer.length = scene.settings.imageSize.width * scene.settings.imageSize.height;
-    imageBuffer.buffer = static_cast<Color*>(malloc(sizeof(Color) * imageBuffer.length));
+    RenderBuffer imageBuffer = CreateImageBuffer(scene.settings.imageSize);
 
     {
         TRACE_EXECUTION("TraceScene");
@@ -31,7 +27,7 @@ int main(int /*argc*/, char** /*argv*/)
 
     SaveImageBufferToFile(imageBuffer, scene.settings.imageSize, "output.png");
 
-    free(imageBuffer.buffer);
+    ReleaseBuffer(imageBuffer);
 
     return 0;
 }

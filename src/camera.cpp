@@ -7,16 +7,13 @@ Camera CameraFromView(const glm::vec3& lookFrom, const glm::vec3& lookAt, const 
                       float aspect)
 {
     float radians = glm::radians(vfov);
-    float halfHeight = glm::tan(radians / 2.0f);
+    constexpr float half = 0.5f;
+    float halfHeight = glm::tan(radians * half);
     float halfWidth = aspect * halfHeight;
     glm::vec3 w = glm::normalize(lookFrom - lookAt);
     glm::vec3 u = glm::normalize(glm::cross(up, w));
     glm::vec3 v = glm::cross(u, w);
 
-    Camera result;
-    result.origin = lookFrom;
-    result.lowerLeft = lookFrom - halfWidth * u - halfHeight * v - w;
-    result.horizontal = 2.0f * halfWidth * u;
-    result.vertical = 2.0f * halfHeight * v;
-    return result;
+    constexpr float two = 2.0f;
+    return Camera{lookFrom, lookFrom - halfWidth * u - halfHeight * v - w, two * halfWidth * u, two * halfHeight * v};
 }
