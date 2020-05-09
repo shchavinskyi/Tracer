@@ -21,9 +21,9 @@ enum class LogLevel : uint8_t
     ERROR
 };
 
-constexpr std::array<const char*, 5> levelStrings = {{" \x1b[37;1m[TRACE]\x1b[0m ", " \x1b[34;1m[DEBUG]\x1b[0m ",
-                                                      " \x1b[32;1m[INFO]\x1b[0m ", " \x1b[33;1m[WARN]\x1b[0m ",
-                                                      " \x1b[31;1m[ERROR]\x1b[0m "}};
+constexpr std::array<const char*, 5> levelStrings = {" \x1b[37;1m[TRACE]\x1b[0m ", " \x1b[34;1m[DEBUG]\x1b[0m ",
+                                                     " \x1b[32;1m[INFO]\x1b[0m ", " \x1b[33;1m[WARN]\x1b[0m ",
+                                                     " \x1b[31;1m[ERROR]\x1b[0m "};
 
 #define LOGGING_LEVEL_ALL
 
