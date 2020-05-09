@@ -4,9 +4,9 @@
 #include "random.h"
 
 #include <chrono>
-#include <deque>
 #include <future>
 #include <glm/gtx/intersect.hpp>
+#include <list>
 #include <set>
 #include <vector>
 

@@ -23,7 +23,7 @@ elseif (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" AND "x${CMAKE_CXX_SIMULATE_ID}
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4 /GR- /EHsc /WX -Wall -Wextra -Werror -Wno-c++98-compat-pedantic")
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2")
 elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror -Wno-c++98-compat-pedantic -fno-rtti -fno-exceptions")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror -Wno-c++98-compat-pedantic -pthread -fno-rtti -fno-exceptions")
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
 endif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 
