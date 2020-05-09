@@ -93,8 +93,8 @@ public:
         int len = sprintf_s(&buffer.front(), maxLogLength - 2, format.c_str(), GetTimestamp().c_str(),
                             levelStrings[static_cast<std::size_t>(level)], args...);
 #else
-        int len = sprintf(buffer, format.c_str(), GetTimestamp().c_str(), levelStrings[static_cast<std::size_t>(level)],
-                          args...);
+        int len = sprintf(&buffer.front(), format.c_str(), GetTimestamp().c_str(),
+                          levelStrings[static_cast<std::size_t>(level)], args...);
 #endif
 
         auto lastIndex = static_cast<std::array<char, maxLogLength>::size_type>(len);
