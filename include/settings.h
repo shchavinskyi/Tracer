@@ -1,6 +1,8 @@
 #ifndef SETTINGS_H
 #define SETTINGS_H
 
+#include <cstdint>
+
 struct ImageSize
 {
     uint32_t width;

@@ -76,6 +76,14 @@
     "editor.detectIndentation": false,
     "editor.formatOnSave": true,
     "cmake.configureOnOpen": true,
+    "cmake.copyCompileCommands": "${workspaceFolder}/compile_commands.json",
     "files.insertFinalNewline": true,
-    "files.trimFinalNewlines": true
+    "files.trimFinalNewlines": true,
+    "clang-tidy.checks": [
+        "clang-analyzer",
+        "cppcoreguidelines",
+        "llvm",
+        "google",
+        "-clang-diagnostic-unused-macros"
+    ]
 }

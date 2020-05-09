@@ -7,7 +7,7 @@ namespace {
 float AspectRatio(const ImageSize& size) { return float(size.width) / float(size.height); }
 } // namespace
 
-void GenerateRandomScene(Scene& scene, size_t sphereCount, size_t materialCount)
+void GenerateRandomScene(Scene& scene, uint32_t sphereCount, uint32_t materialCount)
 {
     RandomFloatGenerator floatGenerator;
     RandomVectorGenerator colorGenerator(0.0f, 1.0f);
@@ -77,6 +77,9 @@ void GenerateRandomScene(Scene& scene, size_t sphereCount, size_t materialCount)
     constexpr float maxRadiuswidth = 0.5f;
     // constexpr float maxHeight = 3.0f;
 
+    uint32_t randomMaterailsCount = static_cast<uint32_t>(scene.materials.size()) - fixedMaterials;
+    assert(randomMaterailsCount > 0);
+
     // Generate spheres
     for (uint32_t i = 0; i < sphereCount - 1; ++i)
     {
@@ -86,8 +89,9 @@ void GenerateRandomScene(Scene& scene, size_t sphereCount, size_t materialCount)
         float radius = floatGenerator.Generate() * (maxRadiuswidth - minRadiuswidth) + minRadiuswidth;
         position.z = radius; // glm::max(radius, floatGenerator.Generate() * maxHeight);
 
-        AddSphere(scene, Sphere{position, radius},
-                  uint32_t(rand() % int(materialCount - fixedMaterials)) + fixedMaterials);
+        uint32_t randomMatId = uint32_t(rand() % int(randomMaterailsCount)) + fixedMaterials;
+
+        AddSphere(scene, Sphere{position, radius}, randomMatId);
     }
 }
 

@@ -28,9 +28,7 @@ constexpr std::array<const char*, 5> levelStrings = {{" \x1b[37;1m[TRACE]\x1b[0m
 #define LOGGING_LEVEL_ALL
 
 // All, something in between, none or default to info
-#if defined(LOGGING_LEVEL_ALL) || defined(LOGGING_LEVEL_TRACE)
-constexpr LogLevel LOG_LEVEL_CUTOFF = LogLevel::TRACE;
-#elif defined(LOGGING_LEVEL_DEBUG)
+#if defined(LOGGING_LEVEL_DEBUG)
 constexpr LogLevel LOG_LEVEL_CUTOFF = LogLevel::DEBUG;
 #elif defined(LOGGING_LEVEL_WARN)
 constexpr LogLevel LOG_LEVEL_CUTOFF = LogLevel::WARN;
@@ -38,7 +36,7 @@ constexpr LogLevel LOG_LEVEL_CUTOFF = LogLevel::WARN;
 constexpr LogLevel LOG_LEVEL_CUTOFF = LogLevel::ERROR;
 #elif defined(LOGGING_LEVEL_NONE)
 constexpr LogLevel LOG_LEVEL_CUTOFF = LogLevel::ERROR + 1;
-#else
+#elif defined(LOGGING_LEVEL_INFO)
 constexpr LogLevel LOG_LEVEL_CUTOFF = LogLevel::INFO;
 #endif
 

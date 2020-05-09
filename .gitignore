@@ -38,3 +38,4 @@ lib/*
 output.png
 vc140.pdb
 output*.png
+compile_commands.json
