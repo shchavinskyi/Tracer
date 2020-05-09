@@ -1,6 +1,6 @@
 #include "material.h"
 
-#include "objects.h"
+#include "data.h"
 #include "random.h"
 
 namespace {

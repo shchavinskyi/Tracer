@@ -1,7 +1,7 @@
 #ifndef RENDER_H
 #define RENDER_H
 
-#include "objects.h"
+#include "data.h"
 
 #include <glm/vec3.hpp>
 

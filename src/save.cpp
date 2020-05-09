@@ -1,7 +1,7 @@
 #include "save.h"
 
+#include "data.h"
 #include "logging.h"
-#include "objects.h"
 #include "scene.h"
 
 #include <glm/vec3.hpp>

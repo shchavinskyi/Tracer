@@ -11,6 +11,12 @@
 
 namespace {
 
+inline Ray GetRay(const Camera& camera, float u, float v)
+{
+    return Ray{camera.origin,
+               glm::normalize(camera.lowerLeft + u * camera.horizontal + v * camera.vertical - camera.origin)};
+}
+
 glm::vec3 TracePath(const Ray& ray, uint32_t maxDepth, const Scene& scene)
 {
     if (maxDepth == 0)

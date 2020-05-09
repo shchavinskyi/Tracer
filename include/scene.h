@@ -1,9 +1,8 @@
 #ifndef SCENE_H
 #define SCENE_H
 
-#include "camera.h"
+#include "data.h"
 #include "material.h"
-#include "objects.h"
 
 #include <glm/vec3.hpp>
 #include <vector>

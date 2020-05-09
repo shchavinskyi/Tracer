@@ -1,5 +1,5 @@
-#ifndef OBJECTS_H
-#define OBJECTS_H
+#ifndef DATA_H
+#define DATA_H
 
 #include <glm/vec3.hpp>
 
@@ -43,4 +43,12 @@ struct RenderBuffer
     uint32_t length;
 };
 
-#endif // OBJECTS_H
+struct Camera
+{
+    glm::vec3 origin;
+    glm::vec3 lowerLeft;
+    glm::vec3 horizontal;
+    glm::vec3 vertical;
+};
+
+#endif // DATA_H

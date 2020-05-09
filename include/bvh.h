@@ -1,8 +1,8 @@
 #ifndef BVH_H
 #define BVH_H
 
+#include "data.h"
 #include "logging.h"
-#include "objects.h"
 #include "scene.h"
 
 #include <algorithm>
