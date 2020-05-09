@@ -97,7 +97,7 @@ public:
                           levelStrings[static_cast<std::size_t>(level)], args...);
 #endif
 
-        auto lastIndex = static_cast<std::array<char, maxLogLength>::size_type>(len);
+        auto lastIndex = static_cast<typename std::array<char, maxLogLength>::size_type>(len);
         buffer[lastIndex] = '\n';
         buffer[lastIndex + 1] = '\0';
 
