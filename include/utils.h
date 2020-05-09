@@ -5,6 +5,7 @@
 #include "scene.h"
 
 #include <cstdint>
+#include <cstdlib>
 
 void GenerateRandomScene(Scene& scene, uint32_t sphereCount, uint32_t materialCount);
 
