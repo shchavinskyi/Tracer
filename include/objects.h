@@ -26,12 +26,19 @@ struct HitResult
 {
     glm::vec3 position;
     glm::vec3 normal;
-    size_t materialId;
+    uint32_t materialId;
+};
+
+struct Color
+{
+    uint8_t r;
+    uint8_t g;
+    uint8_t b;
 };
 
 struct RenderBuffer
 {
-    glm::vec3* buffer;
+    Color* buffer;
     uint32_t start;
     uint32_t length;
 };

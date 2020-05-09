@@ -29,29 +29,29 @@ void AddSphereAndMaterial(Scene& scene, const Sphere& sphere, const Material& ma
 {
     scene.spheresGeometry.push_back(sphere);
     scene.materials.push_back(material);
-    scene.spheresMaterial.push_back(scene.materials.size() - 1);
+    scene.spheresMaterial.push_back(uint32_t(scene.materials.size() - 1));
 }
 
 void AddTriangleAndMaterial(Scene& scene, const Triangle& triangle, const Material& material)
 {
     scene.trianglesGeometry.push_back(triangle);
     scene.materials.push_back(material);
-    scene.trianglesMaterial.push_back(scene.materials.size() - 1);
+    scene.trianglesMaterial.push_back(uint32_t(scene.materials.size() - 1));
 }
 
-void AddSphere(Scene& scene, const Sphere& sphere, size_t materialId)
+void AddSphere(Scene& scene, const Sphere& sphere, uint32_t materialId)
 {
     scene.spheresGeometry.push_back(sphere);
     scene.spheresMaterial.push_back(materialId);
 }
 
-void AddTriangle(Scene& scene, const Triangle& triangle, size_t materialId)
+void AddTriangle(Scene& scene, const Triangle& triangle, uint32_t materialId)
 {
     scene.trianglesGeometry.push_back(triangle);
     scene.trianglesMaterial.push_back(materialId);
 }
 
-void AddXYRect(Scene& scene, const glm::vec3& a, const glm::vec3& b, size_t materialId, bool flip /* = false*/)
+void AddXYRect(Scene& scene, const glm::vec3& a, const glm::vec3& b, uint32_t materialId, bool flip /* = false*/)
 {
     scene.trianglesGeometry.emplace_back(flip ? Triangle{a, glm::vec3(a.x, b.y, a.z), b}
                                               : Triangle{a, b, glm::vec3(a.x, b.y, a.z)});
@@ -61,7 +61,7 @@ void AddXYRect(Scene& scene, const glm::vec3& a, const glm::vec3& b, size_t mate
     scene.trianglesMaterial.push_back(materialId);
 }
 
-void AddXZRect(Scene& scene, const glm::vec3& a, const glm::vec3& b, size_t materialId, bool flip /* = false*/)
+void AddXZRect(Scene& scene, const glm::vec3& a, const glm::vec3& b, uint32_t materialId, bool flip /* = false*/)
 {
     scene.trianglesGeometry.emplace_back(flip ? Triangle{a, glm::vec3(a.x, a.y, b.z), b}
                                               : Triangle{a, b, glm::vec3(a.x, a.y, b.z)});
@@ -71,7 +71,7 @@ void AddXZRect(Scene& scene, const glm::vec3& a, const glm::vec3& b, size_t mate
     scene.trianglesMaterial.push_back(materialId);
 }
 
-void AddYZRect(Scene& scene, const glm::vec3& a, const glm::vec3& b, size_t materialId, bool flip /* = false*/)
+void AddYZRect(Scene& scene, const glm::vec3& a, const glm::vec3& b, uint32_t materialId, bool flip /* = false*/)
 {
     scene.trianglesGeometry.emplace_back(flip ? Triangle{a, glm::vec3(a.x, a.y, b.z), b}
                                               : Triangle{a, b, glm::vec3(a.x, a.y, b.z)});
@@ -81,10 +81,10 @@ void AddYZRect(Scene& scene, const glm::vec3& a, const glm::vec3& b, size_t mate
     scene.trianglesMaterial.push_back(materialId);
 }
 
-size_t AddMaterial(Scene& scene, const Material& material)
+uint32_t AddMaterial(Scene& scene, const Material& material)
 {
     scene.materials.push_back(material);
-    return scene.materials.size() - 1;
+    return uint32_t(scene.materials.size() - 1);
 }
 
 glm::vec3 TracePath(const Ray& ray, uint32_t maxDepth, const Scene& scene)
@@ -168,7 +168,7 @@ glm::vec3 TracePath(const Ray& ray, uint32_t maxDepth, const Scene& scene)
     return backgroundColor(ray);
 }
 
-void RenderScene(const Scene& scene, RenderBuffer& renderBuffer)
+void RenderScene(const Scene& scene, RenderBuffer renderBuffer)
 {
     RandomFloatGenerator floatGenerator;
 
@@ -194,52 +194,27 @@ void RenderScene(const Scene& scene, RenderBuffer& renderBuffer)
         }
 
         acumulatedColor /= scene.settings.samplesPerPixel;
-        renderBuffer.buffer[i] = glm::clamp(acumulatedColor, 0.0f, 1.0f);
-    }
-}
+        acumulatedColor = glm::clamp(acumulatedColor, 0.0f, 1.0f);
 
-void RenderSceneMove(const Scene& scene, RenderBuffer&& renderBuffer)
-{
-    RandomFloatGenerator floatGenerator;
-
-    uint32_t bufferLastIndex = renderBuffer.start + renderBuffer.length;
-
-    assert(bufferLastIndex <= scene.settings.imageSize.width * scene.settings.imageSize.height);
-
-    for (uint32_t i = renderBuffer.start; i < bufferLastIndex; ++i)
-    {
-        uint32_t x = i % scene.settings.imageSize.height;
-        uint32_t y = i / scene.settings.imageSize.height;
-
-        glm::vec3 acumulatedColor(0.0f, 0.0f, 0.0f);
-
-        for (uint32_t j = 0; j < scene.settings.samplesPerPixel; ++j)
-        {
-            float u = (float(x) + floatGenerator.Generate()) / float(scene.settings.imageSize.width);
-            float v = (float(y) + floatGenerator.Generate()) / float(scene.settings.imageSize.height);
-
-            Ray ray = GetRay(scene.camera, u, v);
-
-            acumulatedColor += TracePath(ray, scene.settings.maxBounces, scene);
-        }
-
-        acumulatedColor /= scene.settings.samplesPerPixel;
-        renderBuffer.buffer[i] = glm::clamp(acumulatedColor, 0.0f, 1.0f);
+        Color& outputPixel = renderBuffer.buffer[i];
+        outputPixel.r = static_cast<uint8_t>(255.999f * acumulatedColor.r);
+        outputPixel.g = static_cast<uint8_t>(255.999f * acumulatedColor.g);
+        outputPixel.b = static_cast<uint8_t>(255.999f * acumulatedColor.b);
     }
 }
 
 void RenderSceneMT(const Scene& scene, RenderBuffer& renderBuffer, uint32_t threadCount)
 {
-    // 0 threads / 1 async
+    // 0 threads , 1 async
 #if 1
-    uint32_t pixelCountPerTask = 256;
+    uint32_t pixelCountPerTask = 1024;
 
     uint32_t taskCount =
         renderBuffer.length / pixelCountPerTask + (renderBuffer.length % pixelCountPerTask == 0 ? 0 : 1);
 
-    INFO("%d Pixels splitted to %d tasks", renderBuffer.length, taskCount);
+    INFO("%d Pixels splitted into %d tasks", renderBuffer.length, taskCount);
 
-    std::deque<std::future<void>> futures;
+    std::list<std::future<void>> futures;
 
     uint32_t availableThreads = threadCount;
     uint32_t availableTasks = taskCount;
@@ -255,14 +230,14 @@ void RenderSceneMT(const Scene& scene, RenderBuffer& renderBuffer, uint32_t thre
             if (availableTasks > 1)
             {
                 futures.emplace_back(std::async(
-                    std::launch::async, RenderSceneMove, std::ref(scene),
+                    std::launch::async, RenderScene, std::ref(scene),
                     RenderBuffer{renderBuffer.buffer, nextTaskIndex * pixelCountPerTask, pixelCountPerTask}));
             }
             else
             {
                 uint32_t pixelsLeft = renderBuffer.length - nextTaskIndex * pixelCountPerTask;
                 futures.emplace_back(
-                    std::async(std::launch::async, RenderSceneMove, std::ref(scene),
+                    std::async(std::launch::async, RenderScene, std::ref(scene),
                                RenderBuffer{renderBuffer.buffer, nextTaskIndex * pixelCountPerTask, pixelsLeft}));
             }
 
@@ -309,8 +284,9 @@ void RenderSceneMT(const Scene& scene, RenderBuffer& renderBuffer, uint32_t thre
 
     for (unsigned int i = 0; i < threadCount; ++i)
     {
-        threads.emplace_back(std::thread(
-            RenderScene, scene, RenderBuffer{renderBuffer.buffer, pixelCountPerThread * i, pixelCountPerThread}));
+        threads.emplace_back(
+            std::thread(RenderScene, std::ref(scene),
+                        RenderBuffer{renderBuffer.buffer, pixelCountPerThread * i, pixelCountPerThread}));
     }
 
     for (unsigned int i = 0; i < threadCount; ++i)

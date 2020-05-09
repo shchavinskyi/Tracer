@@ -23,7 +23,7 @@ void GenerateRandomScene(Scene& scene, size_t sphereCount, size_t materialCount)
     AddSphereAndMaterial(scene, Sphere{glm::vec3(0.0f, 0.0f, 5.0f), 2.0f},
                          Material{MaterialType::Light, glm::vec3(1.0f, 1.0f, 1.0f), 0.0f});
 
-    size_t matId = AddMaterial(scene, Material{MaterialType::Diffuse, glm::vec3(0.8f, 0.8f, 0.0f), 0.0f});
+    uint32_t matId = AddMaterial(scene, Material{MaterialType::Diffuse, glm::vec3(0.8f, 0.8f, 0.0f), 0.0f});
     float rectWidth = 8.0f;
     AddTriangle(scene,
                 Triangle{glm::vec3(-1.0f * rectWidth, -1.0f * rectWidth, 0.0f),
@@ -51,10 +51,10 @@ void GenerateRandomScene(Scene& scene, size_t sphereCount, size_t materialCount)
                          glm::vec3(rectWidth, 1.0f * rectWidth2, 0.0f)},
                 matId);
 
-    size_t fixedMaterials = scene.materials.size();
+    uint32_t fixedMaterials = static_cast<uint32_t>(scene.materials.size());
 
     // Generate materials
-    for (size_t i = 0; i < materialCount - fixedMaterials; ++i)
+    for (uint32_t i = 0; i < materialCount - fixedMaterials; ++i)
     {
         glm::vec3 color = colorGenerator.Generate();
 
@@ -87,7 +87,7 @@ void GenerateRandomScene(Scene& scene, size_t sphereCount, size_t materialCount)
         position.z = radius; // glm::max(radius, floatGenerator.Generate() * maxHeight);
 
         AddSphere(scene, Sphere{position, radius},
-                  static_cast<size_t>(rand() % int(materialCount - fixedMaterials)) + fixedMaterials);
+                  uint32_t(rand() % int(materialCount - fixedMaterials)) + fixedMaterials);
     }
 }
 
@@ -104,10 +104,10 @@ void CornellBox(Scene& scene)
     const float fov = 40.0f;
     scene.camera = CameraFromView(cameraPosition, at, up, fov, aspectRatio);
 
-    size_t red = AddMaterial(scene, Material{MaterialType::Diffuse, glm::vec3(0.65f, 0.05f, 0.05f), 0});
-    size_t white = AddMaterial(scene, Material{MaterialType::Diffuse, glm::vec3(0.73f, 0.73f, 0.73f), 0});
-    size_t green = AddMaterial(scene, Material{MaterialType::Diffuse, glm::vec3(0.12f, 0.45f, 0.15f), 0});
-    size_t light = AddMaterial(scene, Material{MaterialType::Light, glm::vec3(15.0f, 15.0f, 15.0f), 0});
+    uint32_t red = AddMaterial(scene, Material{MaterialType::Diffuse, glm::vec3(0.65f, 0.05f, 0.05f), 0});
+    uint32_t white = AddMaterial(scene, Material{MaterialType::Diffuse, glm::vec3(0.73f, 0.73f, 0.73f), 0});
+    uint32_t green = AddMaterial(scene, Material{MaterialType::Diffuse, glm::vec3(0.12f, 0.45f, 0.15f), 0});
+    uint32_t light = AddMaterial(scene, Material{MaterialType::Light, glm::vec3(15.0f, 15.0f, 15.0f), 0});
 
     // bottom
     AddXYRect(scene, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(boxWidth, boxWidth, 0.0f), white);

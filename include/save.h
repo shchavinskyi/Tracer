@@ -5,7 +5,8 @@
 #include <string>
 
 struct ImageSize;
+struct RenderBuffer;
 
-void SaveImageBufferToFile(glm::vec3* buffer, const ImageSize& size, const std::string& filename);
+void SaveImageBufferToFile(const RenderBuffer& buffer, const ImageSize& size, const std::string& filename);
 
 #endif // SAVE_H

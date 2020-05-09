@@ -1,4 +1,5 @@
 #include "logging.h"
+#include "objects.h"
 #include "save.h"
 #include "scene.h"
 #include "utils.h"
@@ -17,7 +18,7 @@ int main(int /*argc*/, char** /*argv*/)
     RenderBuffer imageBuffer;
     imageBuffer.start = 0;
     imageBuffer.length = scene.settings.imageSize.width * scene.settings.imageSize.height;
-    imageBuffer.buffer = static_cast<glm::vec3*>(malloc(sizeof(glm::vec3) * imageBuffer.length));
+    imageBuffer.buffer = static_cast<Color*>(malloc(sizeof(Color) * imageBuffer.length));
 
     {
         TRACE_EXECUTION("TraceScene");
@@ -28,7 +29,7 @@ int main(int /*argc*/, char** /*argv*/)
         RenderSceneMT(scene, imageBuffer, threadCount);
     }
 
-    SaveImageBufferToFile(imageBuffer.buffer, scene.settings.imageSize, "output.png");
+    SaveImageBufferToFile(imageBuffer, scene.settings.imageSize, "output.png");
 
     free(imageBuffer.buffer);
 
