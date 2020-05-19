@@ -5,8 +5,7 @@
 
 namespace {
 
-bool Diffuse(const Ray& /*inRay*/, const HitResult& hitResult, const DiffuseData& data, glm::vec3& attenuation,
-             Ray& scatteredRay)
+bool Diffuse(const HitResult& hitResult, const DiffuseData& data, glm::vec3& attenuation, Ray& scatteredRay)
 {
     static RandomUnitVectorGenerator unitGenerator;
 
@@ -82,31 +81,29 @@ bool Dielectric(const Ray& inRay, const HitResult& hitResult, const DielectricDa
     return true;
 }
 
+template <class... Ts>
+struct overloaded : Ts...
+{
+    using Ts::operator()...;
+};
+
+template <class... Ts>
+overloaded(Ts...)->overloaded<Ts...>;
+
 } // namespace
 
 bool Scatter(const Ray& inRay, const HitResult& hitResult, const Material& material, glm::vec3& attenuation,
              Ray& scatteredRay)
 {
-    switch (material.type)
-    {
-    case MaterialType::Diffuse: {
-        const DiffuseData& data = std::get<DiffuseData>(material.data);
-        return Diffuse(inRay, hitResult, data, attenuation, scatteredRay);
-    }
-
-    case MaterialType::Metal: {
-        const MetalData& data = std::get<MetalData>(material.data);
-        return Metal(inRay, hitResult, data, attenuation, scatteredRay);
-    }
-
-    case MaterialType::Dielectric: {
-        const DielectricData& data = std::get<DielectricData>(material.data);
-        return Dielectric(inRay, hitResult, data, attenuation, scatteredRay);
-    }
-
-    case MaterialType::Light:
-        return false;
-    }
-
-    return false;
+    return std::visit(overloaded{[&hitResult, &attenuation, &scatteredRay](const DiffuseData& data) {
+                                     return Diffuse(hitResult, data, attenuation, scatteredRay);
+                                 },
+                                 [&inRay, &hitResult, &attenuation, &scatteredRay](const MetalData& data) {
+                                     return Metal(inRay, hitResult, data, attenuation, scatteredRay);
+                                 },
+                                 [&inRay, &hitResult, &attenuation, &scatteredRay](const DielectricData& data) {
+                                     return Dielectric(inRay, hitResult, data, attenuation, scatteredRay);
+                                 },
+                                 [](auto) { return false; }},
+                      material.data);
 }

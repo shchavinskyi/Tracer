@@ -8,6 +8,7 @@
 #include <future>
 #include <glm/gtx/intersect.hpp>
 #include <list>
+#include <variant>
 
 namespace {
 
@@ -84,11 +85,9 @@ glm::vec3 TracePath(const Ray& ray, uint32_t maxDepth, const Scene& scene)
         glm::vec3 attenuation;
 
         const Material& material = scene.materials[hitResult.materialId];
-
-        if (material.type == MaterialType::Light)
+        if (const LightData* data = std::get_if<LightData>(&material.data))
         {
-            const LightData& data = std::get<LightData>(material.data);
-            return data.emissive;
+            return data->emissive;
         }
         else if (Scatter(ray, hitResult, material, attenuation, scattered))
         {
