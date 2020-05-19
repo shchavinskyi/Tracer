@@ -5,7 +5,7 @@
 
 namespace {
 
-bool Diffuse(const HitResult& hitResult, const DiffuseData& data, glm::vec3& attenuation, Ray& scatteredRay)
+bool Diffuse(const HitResult& hitResult, const Material::DiffuseData& data, glm::vec3& attenuation, Ray& scatteredRay)
 {
     static RandomUnitVectorGenerator unitGenerator;
 
@@ -18,7 +18,7 @@ bool Diffuse(const HitResult& hitResult, const DiffuseData& data, glm::vec3& att
     return true;
 }
 
-bool Metal(const Ray& inRay, const HitResult& hitResult, const MetalData& data, glm::vec3& attenuation,
+bool Metal(const Ray& inRay, const HitResult& hitResult, const Material::MetalData& data, glm::vec3& attenuation,
            Ray& scatteredRay)
 {
     static RandomInUnitSphereGenerator generator;
@@ -37,8 +37,8 @@ float Schlick(float cosine, float refractIndex)
     return r0 + (1.0f - r0) * pow((1.0f - cosine), 5.0f);
 }
 
-bool Dielectric(const Ray& inRay, const HitResult& hitResult, const DielectricData& data, glm::vec3& attenuation,
-                Ray& scatteredRay)
+bool Dielectric(const Ray& inRay, const HitResult& hitResult, const Material::DielectricData& data,
+                glm::vec3& attenuation, Ray& scatteredRay)
 {
     glm::vec3 normal = hitResult.normal;
     float refractIndex = 0.0f;
@@ -95,15 +95,16 @@ overloaded(Ts...)->overloaded<Ts...>;
 bool Scatter(const Ray& inRay, const HitResult& hitResult, const Material& material, glm::vec3& attenuation,
              Ray& scatteredRay)
 {
-    return std::visit(overloaded{[&hitResult, &attenuation, &scatteredRay](const DiffuseData& data) {
-                                     return Diffuse(hitResult, data, attenuation, scatteredRay);
-                                 },
-                                 [&inRay, &hitResult, &attenuation, &scatteredRay](const MetalData& data) {
-                                     return Metal(inRay, hitResult, data, attenuation, scatteredRay);
-                                 },
-                                 [&inRay, &hitResult, &attenuation, &scatteredRay](const DielectricData& data) {
-                                     return Dielectric(inRay, hitResult, data, attenuation, scatteredRay);
-                                 },
-                                 [](auto) { return false; }},
-                      material.data);
+    return std::visit(
+        overloaded{[&hitResult, &attenuation, &scatteredRay](const Material::DiffuseData& data) {
+                       return Diffuse(hitResult, data, attenuation, scatteredRay);
+                   },
+                   [&inRay, &hitResult, &attenuation, &scatteredRay](const Material::MetalData& data) {
+                       return Metal(inRay, hitResult, data, attenuation, scatteredRay);
+                   },
+                   [&inRay, &hitResult, &attenuation, &scatteredRay](const Material::DielectricData& data) {
+                       return Dielectric(inRay, hitResult, data, attenuation, scatteredRay);
+                   },
+                   [](auto) { return false; }},
+        material.data);
 }

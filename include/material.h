@@ -7,50 +7,66 @@
 struct Ray;
 struct HitResult;
 
-struct DiffuseData
-{
-    glm::vec3 albedo;
-};
-
-struct MetalData
-{
-    glm::vec3 albedo;
-    float fuzziness;
-};
-
-struct DielectricData
-{
-    glm::vec3 albedo;
-    float fuzziness;
-};
-
-struct LightData
-{
-    glm::vec3 emissive;
-};
-
-using MaterialData = std::variant<DiffuseData, MetalData, DielectricData, LightData>;
-
 struct Material
 {
+    struct DiffuseData
+    {
+        glm::vec3 albedo;
+    };
+
+    struct MetalData
+    {
+        glm::vec3 albedo;
+        float fuzziness;
+    };
+
+    struct DielectricData
+    {
+        glm::vec3 albedo;
+        float fuzziness;
+    };
+
+    struct LightData
+    {
+        glm::vec3 emissive;
+    };
+
+    using MaterialData = std::variant<DiffuseData, MetalData, DielectricData, LightData>;
+
     MaterialData data;
+
+    static inline Material CreateDiffuse(const glm::vec3& albedo);
+
+    static inline Material CreateMetal(const glm::vec3& albedo, float fuzziness);
+
+    static inline Material CreateDielectric(const glm::vec3& albedo, float fuzziness);
+
+    static inline Material CreateLight(const glm::vec3& emissive);
 };
-
-inline Material CreateDiffuseMaterial(const glm::vec3& albedo) { return Material{DiffuseData{albedo}}; }
-
-inline Material CreateMetalMaterial(const glm::vec3& albedo, float fuzziness)
-{
-    return Material{MetalData{albedo, fuzziness}};
-}
-
-inline Material CreateDielectricMaterial(const glm::vec3& albedo, float fuzziness)
-{
-    return Material{DielectricData{albedo, fuzziness}};
-}
-
-inline Material CreateLightMaterial(const glm::vec3& emissive) { return Material{LightData{emissive}}; }
 
 bool Scatter(const Ray& inRay, const HitResult& hitResult, const Material& material, glm::vec3& attenuation,
              Ray& scatteredRay);
+
+// -- inline functions --
+
+Material Material::CreateDiffuse(const glm::vec3& albedo)
+{
+    return Material{Material::DiffuseData{albedo}};
+}
+
+Material Material::CreateMetal(const glm::vec3& albedo, float fuzziness)
+{
+    return Material{Material::MetalData{albedo, fuzziness}};
+}
+
+Material Material::CreateDielectric(const glm::vec3& albedo, float fuzziness)
+{
+    return Material{Material::DielectricData{albedo, fuzziness}};
+}
+
+Material Material::CreateLight(const glm::vec3& emissive)
+{
+    return Material{Material::LightData{emissive}};
+}
 
 #endif // MATERIAL_H

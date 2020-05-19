@@ -38,9 +38,9 @@ void GenerateRandomScene(Scene& scene, uint32_t sphereCount, uint32_t materialCo
     scene.backgroundColor = glm::vec3(0.5f, 0.7f, 1.0f);
 
     AddSphereAndMaterial(scene, Sphere{glm::vec3(0.0f, 0.0f, 5.0f), 2.0f},
-                         CreateLightMaterial(glm::vec3(1.0f, 1.0f, 1.0f)));
+                         Material::CreateLight(glm::vec3(1.0f, 1.0f, 1.0f)));
 
-    uint32_t matId = AddMaterial(scene, CreateDiffuseMaterial(glm::vec3(0.8f, 0.8f, 0.0f)));
+    uint32_t matId = AddMaterial(scene, Material::CreateDiffuse(glm::vec3(0.8f, 0.8f, 0.0f)));
     float rectWidth = 8.0f;
     AddTriangle(scene,
                 Triangle{glm::vec3(-1.0f * rectWidth, -1.0f * rectWidth, 0.0f),
@@ -54,7 +54,7 @@ void GenerateRandomScene(Scene& scene, uint32_t sphereCount, uint32_t materialCo
                          glm::vec3(-1.0f * rectWidth, 1.0f * rectWidth, 0.0f)},
                 matId);
 
-    matId = AddMaterial(scene, CreateMetalMaterial(glm::vec3(0.9f, 1.0f, 1.0f), 0.01f));
+    matId = AddMaterial(scene, Material::CreateMetal(glm::vec3(0.9f, 1.0f, 1.0f), 0.01f));
     float rectWidth2 = 6.0f;
     AddTriangle(scene,
                 Triangle{glm::vec3(rectWidth, -1.0f * rectWidth2, 0.0f),
@@ -80,15 +80,15 @@ void GenerateRandomScene(Scene& scene, uint32_t sphereCount, uint32_t materialCo
         Material randomMaterial;
         if (materialFactor < 0.4f)
         {
-            randomMaterial = CreateDiffuseMaterial(randomColor);
+            randomMaterial = Material::CreateDiffuse(randomColor);
         }
         else if (materialFactor > 0.6f)
         {
-            randomMaterial = CreateMetalMaterial(randomColor, floatGenerator.Generate());
+            randomMaterial = Material::CreateMetal(randomColor, floatGenerator.Generate());
         }
         else
         {
-            randomMaterial = CreateDielectricMaterial(randomColor, floatGenerator.Generate());
+            randomMaterial = Material::CreateDielectric(randomColor, floatGenerator.Generate());
         }
 
         AddMaterial(scene, randomMaterial);
@@ -131,10 +131,10 @@ void CornellBox(Scene& scene)
 
     scene.backgroundColor = glm::vec3(0.0f, 0.0f, 0.0f);
 
-    uint32_t red = AddMaterial(scene, CreateDiffuseMaterial(glm::vec3(0.65f, 0.05f, 0.05f)));
-    uint32_t white = AddMaterial(scene, CreateDiffuseMaterial(glm::vec3(0.73f, 0.73f, 0.73f)));
-    uint32_t green = AddMaterial(scene, CreateDiffuseMaterial(glm::vec3(0.12f, 0.45f, 0.15f)));
-    uint32_t light = AddMaterial(scene, CreateLightMaterial(glm::vec3(15.0f, 15.0f, 15.0f)));
+    uint32_t red = AddMaterial(scene, Material::CreateDiffuse(glm::vec3(0.65f, 0.05f, 0.05f)));
+    uint32_t white = AddMaterial(scene, Material::CreateDiffuse(glm::vec3(0.73f, 0.73f, 0.73f)));
+    uint32_t green = AddMaterial(scene, Material::CreateDiffuse(glm::vec3(0.12f, 0.45f, 0.15f)));
+    uint32_t light = AddMaterial(scene, Material::CreateLight(glm::vec3(15.0f, 15.0f, 15.0f)));
 
     // bottom
     AddXYRect(scene, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(boxWidth, boxWidth, 0.0f), white);
@@ -156,11 +156,11 @@ void CornellBox(Scene& scene)
 
     constexpr float radius = 80.0f;
     AddSphereAndMaterial(scene, Sphere{glm::vec3(boxHalfWidth - 10.0f, boxHalfWidth + 100.0f, radius), radius},
-                         CreateMetalMaterial(glm::vec3(0.73f, 0.73f, 0.73f), 0.0f));
+                         Material::CreateMetal(glm::vec3(0.73f, 0.73f, 0.73f), 0.0f));
 
     AddSphereAndMaterial(scene, Sphere{glm::vec3(boxHalfWidth + 120.0f, boxHalfWidth - 40.0f, radius), radius},
-                         CreateDiffuseMaterial(glm::vec3(0.73f, 0.73f, 0.73f)));
+                         Material::CreateDiffuse(glm::vec3(0.73f, 0.73f, 0.73f)));
 
     AddSphereAndMaterial(scene, Sphere{glm::vec3(radius + 100.0f, boxHalfWidth - 120.0f, radius), radius},
-                         CreateDielectricMaterial(glm::vec3(0.73f, 0.73f, 0.73f), 0.97f));
+                         Material::CreateDielectric(glm::vec3(0.73f, 0.73f, 0.73f), 0.97f));
 }

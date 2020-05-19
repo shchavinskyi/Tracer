@@ -25,3 +25,4 @@ AllowShortCaseLabelsOnASingleLine: false
 SpaceBeforeParens: ControlStatements
 AccessModifierOffset: -4
 AlwaysBreakTemplateDeclarations: Yes
+AllowShortFunctionsOnASingleLine: Empty  

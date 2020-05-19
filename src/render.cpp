@@ -85,7 +85,7 @@ glm::vec3 TracePath(const Ray& ray, uint32_t maxDepth, const Scene& scene)
         glm::vec3 attenuation;
 
         const Material& material = scene.materials[hitResult.materialId];
-        if (const LightData* data = std::get_if<LightData>(&material.data))
+        if (const Material::LightData* data = std::get_if<Material::LightData>(&material.data))
         {
             return data->emissive;
         }
