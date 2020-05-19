@@ -70,7 +70,8 @@
         "deque": "cpp",
         "condition_variable": "cpp",
         "future": "cpp",
-        "resumable": "cpp"
+        "resumable": "cpp",
+        "variant": "cpp"
     },
     "editor.tabSize": 4,
     "editor.insertSpaces": true,

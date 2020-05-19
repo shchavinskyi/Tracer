@@ -87,7 +87,8 @@ glm::vec3 TracePath(const Ray& ray, uint32_t maxDepth, const Scene& scene)
 
         if (material.type == MaterialType::Light)
         {
-            return material.albedo;
+            const LightData& data = std::get<LightData>(material.data);
+            return data.emissive;
         }
         else if (Scatter(ray, hitResult, material, attenuation, scattered))
         {
