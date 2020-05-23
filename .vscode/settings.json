@@ -92,6 +92,7 @@
         "-cppcoreguidelines-no-malloc",
         "-cppcoreguidelines-owning-memory",
         "-cppcoreguidelines-pro-type-union-access",
+        "-cppcoreguidelines-pro-bounds-pointer-arithmetic",
         "llvm-*",
         "-llvm-header-guard",
         "-clang-diagnostic-unused-macros",
@@ -102,6 +103,6 @@
         "-readability-uppercase-literal-suffix",
         "-readability-magic-numbers",
         "performance-*",
-        "portability-*"
+        "portability-*",
     ]
 }

@@ -1,6 +1,9 @@
-
 #ifndef LOGGER_H
 #define LOGGER_H
+
+#ifdef _MSC_VER
+#pragma warning(disable : 4996)
+#endif
 
 #include <array>
 #include <chrono>
@@ -22,8 +25,9 @@ enum class LogLevel : uint8_t
 };
 
 constexpr std::array<const char*, 5> levelStrings = {" \x1b[37;1m[TRACE]\x1b[0m ", " \x1b[34;1m[DEBUG]\x1b[0m ",
-                                                     " \x1b[32;1m[INFO]\x1b[0m ", " \x1b[33;1m[WARN]\x1b[0m ",
+                                                     " \x1b[32;1m[INFO]\x1b[0m  ", " \x1b[33;1m[WARN]\x1b[0m  ",
                                                      " \x1b[31;1m[ERROR]\x1b[0m "};
+constexpr std::size_t levelStringLength = 20;
 
 #define LOGGING_LEVEL_ALL
 
@@ -40,20 +44,21 @@ constexpr LogLevel LOG_LEVEL_CUTOFF = LogLevel::ERROR + 1;
 constexpr LogLevel LOG_LEVEL_CUTOFF = LogLevel::INFO;
 #endif
 
-inline std::string GetTimestamp()
+inline std::size_t FillTimestamp(char* buffer)
 {
     using namespace std::chrono;
 
-    std::string timestamp;
-    constexpr size_t timestampLenght = 23;
-    constexpr size_t fractionLenght = 5;
-
-    timestamp.resize(timestampLenght - fractionLenght);
+    //
+    // >>|23/05/20 19:34:13 997 |<< 22 characters + '\0'
+    //
+    constexpr std::size_t timestampLenght = 23;
+    constexpr std::size_t fractionLenght = 5;
+    constexpr std::size_t timeLenght = timestampLenght - fractionLenght;
 
     system_clock::time_point tp = system_clock::now();
 
     milliseconds ms = duration_cast<milliseconds>(tp.time_since_epoch());
-    std::size_t fractionalMS = ms.count() % 1000;
+    int32_t fractionalMS = ms.count() % 1000;
     std::time_t tt = system_clock::to_time_t(tp);
 
     tm newtime{};
@@ -64,11 +69,22 @@ inline std::string GetTimestamp()
     localtime_r(&tt, &newtime);
 #endif
 
-    strftime(&timestamp.front(), timestamp.size(), "%d/%m/%y %H:%M:%S", &newtime);
+    strftime(buffer, timeLenght, "%d/%m/%y %H:%M:%S", &newtime);
+    snprintf(&buffer[timeLenght - 1], fractionLenght, " %3d", fractionalMS);
 
-    timestamp.append(std::to_string(fractionalMS));
+    return timestampLenght - 1;
+}
 
-    return timestamp;
+inline std::size_t StrCpy(char* Dest, const char* Source)
+{
+    std::size_t count = 0;
+    while (*Source != '\0')
+    {
+        ++count;
+        *Dest++ = *Source++;
+    }
+
+    return count;
 }
 
 class Logger
@@ -83,23 +99,19 @@ public:
             return;
 #endif
 
-        std::string format("%s%s");
-        format.append(message);
-
         constexpr uint32_t maxLogLength = 256;
         std::array<char, maxLogLength> buffer = {'\0'};
 
-#ifdef _MSC_VER
-        int len = sprintf_s(&buffer.front(), maxLogLength - 2, format.c_str(), GetTimestamp().c_str(),
-                            levelStrings[static_cast<std::size_t>(level)], args...);
-#else
-        int len = sprintf(&buffer.front(), format.c_str(), GetTimestamp().c_str(),
-                          levelStrings[static_cast<std::size_t>(level)], args...);
-#endif
+        std::size_t bufferIndex = FillTimestamp(&buffer.front()) - 1;
 
-        auto lastIndex = static_cast<typename std::array<char, maxLogLength>::size_type>(len);
-        buffer[lastIndex] = '\n';
-        buffer[lastIndex + 1] = '\0';
+        strncpy(&buffer[bufferIndex], levelStrings[static_cast<std::size_t>(level)], levelStringLength);
+        bufferIndex += levelStringLength;
+
+        bufferIndex +=
+            std::size_t(snprintf(&buffer[bufferIndex], maxLogLength - bufferIndex - 2, message.c_str(), args...));
+
+        buffer[bufferIndex] = '\n';
+        buffer[bufferIndex + 1] = '\0';
 
         std::cout << &buffer.front();
         std::cout.flush();
