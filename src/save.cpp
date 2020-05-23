@@ -38,5 +38,5 @@ void SaveImageBufferToFile(const RenderBuffer& renderBuffer, const ImageSize& si
     int result = stbi_write_png(filename.c_str(), int(size.width), int(size.height), numberOfChenels,
                                 renderBuffer.buffer, int(size.width * numberOfChenels));
 
-    INFO("Image successfully save to file : %s with result %d", filename.c_str(), result);
+    LOG_INFO("Image successfully save to file : %s with result %d", filename.c_str(), result);
 }

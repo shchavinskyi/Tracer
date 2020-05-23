@@ -86,7 +86,7 @@ public:
         std::string format("%s%s");
         format.append(message);
 
-        constexpr size_t maxLogLength = 256;
+        constexpr uint32_t maxLogLength = 256;
         std::array<char, maxLogLength> buffer = {'\0'};
 
 #ifdef _MSC_VER
@@ -133,7 +133,7 @@ inline void DEBUG(std::string&& message, Args... args)
 }
 
 template <typename... Args>
-inline void INFO(std::string&& message, Args... args)
+inline void LOG_INFO(std::string&& message, Args... args)
 {
     Logging::GetLogger().Log(Logging::LogLevel::INFO, message, args...);
 }

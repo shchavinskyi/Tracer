@@ -144,7 +144,7 @@ void RenderSceneMT(const Scene& scene, RenderBuffer& renderBuffer, uint32_t thre
     uint32_t taskCount =
         renderBuffer.length / pixelCountPerTask + (renderBuffer.length % pixelCountPerTask == 0 ? 0 : 1);
 
-    INFO("%d Pixels splitted into %d tasks", renderBuffer.length, taskCount);
+    LOG_INFO("%d Pixels splitted into %d tasks", renderBuffer.length, taskCount);
 
     std::list<std::future<void>> futures;
 
@@ -203,7 +203,7 @@ void RenderSceneMT(const Scene& scene, RenderBuffer& renderBuffer, uint32_t thre
         if (percent % progresDiv == 0 && percent != progress)
         {
             progress = percent;
-            INFO("Tracing porgress %d", progress);
+            LOG_INFO("Tracing porgress %d", progress);
         }
     }
 

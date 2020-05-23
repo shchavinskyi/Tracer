@@ -20,7 +20,7 @@ int main(int /*argc*/, char** /*argv*/)
         TRACE_EXECUTION("TraceScene");
 
         unsigned int threadCount = std::thread::hardware_concurrency();
-        INFO("[ %d ] hardware concurrent threads are supported.", threadCount);
+        LOG_INFO("[ %d ] hardware concurrent threads are supported.", threadCount);
 
         RenderSceneMT(scene, imageBuffer, threadCount);
     }
