@@ -9,7 +9,7 @@ TEST_CASE("logger single-thread performance")
 
     for (int i = 0; i < 10000; ++i)
     {
-        LOG_INFO("string %s int %d", "string", 100);
+        LOG_INFO("INFO string %s int %d", "string", 100);
 
         Log(Logging::LogLevel::ERROR, "error sample %s", "string");
     }
@@ -35,7 +35,7 @@ TEST_CASE("logger multi-thread performance")
 
     for (unsigned int i = 0; i < threadCount; ++i)
     {
-        threads.emplace_back(std::thread(logFunction, threadCount));
+        threads.emplace_back(std::thread(logFunction, i));
     }
 
     for (unsigned int i = 0; i < threadCount; ++i)

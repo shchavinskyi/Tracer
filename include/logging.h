@@ -75,97 +75,68 @@ inline std::size_t FillTimestamp(char* buffer)
     return timestampLenght - 1;
 }
 
-inline std::size_t StrCpy(char* Dest, const char* Source)
+template <typename... Args>
+void Log(const LogLevel level, const char* message, Args... args)
 {
-    std::size_t count = 0;
-    while (*Source != '\0')
-    {
-        ++count;
-        *Dest++ = *Source++;
-    }
-
-    return count;
-}
-
-class Logger
-{
-public:
-    template <typename... Args>
-    void Log(const LogLevel level, const std::string& message, Args... args)
-    {
 #if !defined(LOGGING_LEVEL_ALL) && !defined(LOGGING_LEVEL_TRACE)
-        // Cut off only if needed
-        if (level < LOG_LEVEL_CUTOFF)
-            return;
+    // Cut off only if needed
+    if (level < LOG_LEVEL_CUTOFF)
+        return;
 #endif
 
-        constexpr uint32_t maxLogLength = 256;
-        std::array<char, maxLogLength> buffer = {'\0'};
+    constexpr uint32_t maxLogLength = 256;
+    std::array<char, maxLogLength> buffer = {'\0'};
 
-        std::size_t bufferIndex = FillTimestamp(&buffer.front()) - 1;
+    std::size_t bufferIndex = FillTimestamp(&buffer.front()) - 1;
 
-        strncpy(&buffer[bufferIndex], levelStrings[static_cast<std::size_t>(level)], levelStringLength);
-        bufferIndex += levelStringLength;
+    strncpy(&buffer[bufferIndex], levelStrings[static_cast<std::size_t>(level)], levelStringLength);
+    bufferIndex += levelStringLength;
 
-        bufferIndex +=
-            std::size_t(snprintf(&buffer[bufferIndex], maxLogLength - bufferIndex - 2, message.c_str(), args...));
+    bufferIndex += std::size_t(snprintf(&buffer[bufferIndex], maxLogLength - bufferIndex - 2, message, args...));
 
-        buffer[bufferIndex] = '\n';
-        buffer[bufferIndex + 1] = '\0';
+    buffer[bufferIndex] = '\n';
+    buffer[bufferIndex + 1] = '\0';
 
-        std::cout << &buffer.front();
-        std::cout.flush();
-    }
-};
-
-inline Logger& GetLogger()
-{
-    static Logger loggerSingleton;
-    return loggerSingleton;
+    std::cout << &buffer.front();
+    std::cout.flush();
 }
 
 } // namespace Logging
 
 template <typename... Args>
-inline void Log(const Logging::LogLevel level, std::string&& message, Args... args)
+inline void TRACE(const char* message, Args... args)
 {
-    Logging::GetLogger().Log(level, message, args...);
+    Logging::Log(Logging::LogLevel::TRACE, message, args...);
 }
 
 template <typename... Args>
-inline void TRACE(std::string&& message, Args... args)
+inline void DEBUG(const char* message, Args... args)
 {
-    Logging::GetLogger().Log(Logging::LogLevel::TRACE, message, args...);
+    Logging::Log(Logging::LogLevel::DEBUG, message, args...);
 }
 
 template <typename... Args>
-inline void DEBUG(std::string&& message, Args... args)
+inline void LOG_INFO(const char* message, Args... args)
 {
-    Logging::GetLogger().Log(Logging::LogLevel::DEBUG, message, args...);
+    Logging::Log(Logging::LogLevel::INFO, message, args...);
 }
 
 template <typename... Args>
-inline void LOG_INFO(std::string&& message, Args... args)
+inline void WARN(const char* message, Args... args)
 {
-    Logging::GetLogger().Log(Logging::LogLevel::INFO, message, args...);
+    Logging::Log(Logging::LogLevel::WARN, message, args...);
 }
 
 template <typename... Args>
-inline void WARN(std::string&& message, Args... args)
+inline void ERROR(const char* message, Args... args)
 {
-    Logging::GetLogger().Log(Logging::LogLevel::WARN, message, args...);
-}
-
-template <typename... Args>
-inline void ERROR(std::string&& message, Args... args)
-{
-    Logging::GetLogger().Log(Logging::LogLevel::ERROR, message, args...);
+    Logging::Log(Logging::LogLevel::ERROR, message, args...);
 }
 
 class ExecutionLogger
 {
 private:
-    std::string message;
+    const char* message;
     std::chrono::high_resolution_clock::time_point start;
 
 public:
@@ -174,8 +145,8 @@ public:
     ExecutionLogger(ExecutionLogger&&) = delete;
     ExecutionLogger& operator=(ExecutionLogger&&) = delete;
 
-    ExecutionLogger(std::string&& inMessage)
-        : message(std::move(inMessage))
+    ExecutionLogger(const char* inMessage)
+        : message(inMessage)
         , start(std::chrono::high_resolution_clock::now())
     {
     }
@@ -188,7 +159,7 @@ public:
 
         milliseconds duration = duration_cast<milliseconds>(stop - start);
 
-        TRACE("%s takes %ld msec", message.c_str(), duration.count());
+        TRACE("%s takes %ld msec", message, duration.count());
     }
 };
 
