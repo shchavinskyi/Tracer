@@ -70,7 +70,7 @@ inline std::size_t FillTimestamp(char* buffer)
 #endif
 
     strftime(buffer, timeLenght, "%d/%m/%y %H:%M:%S", &newtime);
-    snprintf(&buffer[timeLenght - 1], fractionLenght, " %3d", fractionalMS);
+    snprintf(&buffer[timeLenght - 1], fractionLenght, " %03d", fractionalMS);
 
     return timestampLenght - 1;
 }

@@ -9,6 +9,7 @@ struct Sphere
     float radius;
 };
 
+// TODO add traingles as indexes of vertices in buffer
 struct Triangle
 {
     glm::vec3 v1;
@@ -27,6 +28,12 @@ struct HitResult
     glm::vec3 position;
     glm::vec3 normal;
     uint32_t materialId;
+};
+
+struct ScatterResult
+{
+    Ray ray;
+    glm::vec3 attenuation;
 };
 
 struct Color

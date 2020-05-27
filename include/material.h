@@ -6,6 +6,7 @@
 
 struct Ray;
 struct HitResult;
+struct ScatterResult;
 
 struct Material
 {
@@ -44,8 +45,7 @@ struct Material
     static inline Material CreateLight(const glm::vec3& emissive);
 };
 
-bool Scatter(const Ray& inRay, const HitResult& hitResult, const Material& material, glm::vec3& attenuation,
-             Ray& scatteredRay);
+bool Scatter(const Ray& inRay, const HitResult& hitResult, const Material& material, ScatterResult& scatterResult);
 
 // -- inline functions --
 

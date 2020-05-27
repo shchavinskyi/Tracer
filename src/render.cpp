@@ -81,17 +81,16 @@ glm::vec3 TracePath(const Ray& ray, uint32_t maxDepth, const Scene& scene)
 
     if (isHit)
     {
-        Ray scattered;
-        glm::vec3 attenuation;
+        ScatterResult scatterResult;
 
         const Material& material = scene.materials[hitResult.materialId];
         if (const Material::LightData* data = std::get_if<Material::LightData>(&material.data))
         {
             return data->emissive;
         }
-        else if (Scatter(ray, hitResult, material, attenuation, scattered))
+        else if (Scatter(ray, hitResult, material, scatterResult))
         {
-            return attenuation * TracePath(scattered, maxDepth - 1, scene);
+            return scatterResult.attenuation * TracePath(scatterResult.ray, maxDepth - 1, scene);
         }
     }
 
@@ -139,7 +138,7 @@ void RenderSceneMT(const Scene& scene, RenderBuffer& renderBuffer, uint32_t thre
 {
     // 0 threads , 1 async
 #if 1
-    uint32_t pixelCountPerTask = 1024;
+    constexpr uint32_t pixelCountPerTask = 1024;
 
     uint32_t taskCount =
         renderBuffer.length / pixelCountPerTask + (renderBuffer.length % pixelCountPerTask == 0 ? 0 : 1);
@@ -158,20 +157,16 @@ void RenderSceneMT(const Scene& scene, RenderBuffer& renderBuffer, uint32_t thre
         while (availableThreads > 0 && availableTasks > 0)
         {
             uint32_t nextTaskIndex = taskCount - availableTasks;
+            uint32_t pixelsToProcess = pixelCountPerTask;
 
-            if (availableTasks > 1)
+            if (availableTasks == 1)
             {
-                futures.emplace_back(std::async(
-                    std::launch::async, RenderScene, std::ref(scene),
-                    RenderBuffer{renderBuffer.buffer, nextTaskIndex * pixelCountPerTask, pixelCountPerTask}));
+                pixelsToProcess = renderBuffer.length - nextTaskIndex * pixelCountPerTask;
             }
-            else
-            {
-                uint32_t pixelsLeft = renderBuffer.length - nextTaskIndex * pixelCountPerTask;
-                futures.emplace_back(
-                    std::async(std::launch::async, RenderScene, std::ref(scene),
-                               RenderBuffer{renderBuffer.buffer, nextTaskIndex * pixelCountPerTask, pixelsLeft}));
-            }
+
+            futures.emplace_back(
+                std::async(std::launch::async, RenderScene, std::ref(scene),
+                           RenderBuffer{renderBuffer.buffer, nextTaskIndex * pixelCountPerTask, pixelsToProcess}));
 
             --availableTasks;
             --availableThreads;
