@@ -3,7 +3,10 @@
 #include "random.h"
 
 namespace {
-float AspectRatio(const ImageSize& size) { return float(size.width) / float(size.height); }
+float AspectRatio(const ImageSize& size)
+{
+    return float(size.width) / float(size.height);
+}
 } // namespace
 
 Camera CameraFromView(const glm::vec3& lookFrom, const glm::vec3& lookAt, const glm::vec3& up,
@@ -35,7 +38,7 @@ void GenerateRandomScene(Scene& scene, uint32_t sphereCount, uint32_t materialCo
     const float fov = 45.0f;
     scene.camera = CameraFromView(cameraPosition, at, up, fov, aspectRatio);
 
-    scene.backgroundColor = glm::vec3(0.5f, 0.7f, 1.0f);
+    scene.settings.backgroundColor = glm::vec3(0.5f, 0.7f, 1.0f);
 
     AddSphereAndMaterial(scene, Sphere{glm::vec3(0.0f, 0.0f, 5.0f), 2.0f},
                          Material::CreateLight(glm::vec3(1.0f, 1.0f, 1.0f)));
@@ -129,7 +132,7 @@ void CornellBox(Scene& scene)
     const float fov = 40.0f;
     scene.camera = CameraFromView(cameraPosition, at, up, fov, aspectRatio);
 
-    scene.backgroundColor = glm::vec3(0.0f, 0.0f, 0.0f);
+    scene.settings.backgroundColor = glm::vec3(0.0f, 0.0f, 0.0f);
 
     uint32_t red = AddMaterial(scene, Material::CreateDiffuse(glm::vec3(0.65f, 0.05f, 0.05f)));
     uint32_t white = AddMaterial(scene, Material::CreateDiffuse(glm::vec3(0.73f, 0.73f, 0.73f)));

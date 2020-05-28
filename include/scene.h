@@ -18,16 +18,18 @@ struct Settings
     ImageSize imageSize;
     uint32_t samplesPerPixel;
     uint32_t maxBounces;
+    glm::vec3 backgroundColor;
 };
 
-inline Settings DefaultSettings() { return Settings{{400, 400}, 250, 10}; }
+inline Settings DefaultSettings()
+{
+    return Settings{{400, 400}, 250, 10, glm::vec3(0.5f, 0.7f, 1.0f)};
+}
 
 struct Scene
 {
     Settings settings;
     Camera camera;
-
-    glm::vec3 backgroundColor;
 
     std::vector<Sphere> spheresGeometry;
     std::vector<uint32_t> spheresMaterial;

@@ -15,12 +15,10 @@ Camera CameraFromView(const glm::vec3& lookFrom, const glm::vec3& lookAt, const 
 
 // Buffer helpers
 RenderBuffer CreateImageBuffer(const ImageSize& size);
-
 void ReleaseBuffer(RenderBuffer& buffer);
 
 // Sample scene generators
 void GenerateRandomScene(Scene& scene, uint32_t sphereCount, uint32_t materialCount);
-
 void CornellBox(Scene& scene);
 
 // -- Inline functions --
@@ -31,6 +29,9 @@ inline RenderBuffer CreateImageBuffer(const ImageSize& size)
     return RenderBuffer{static_cast<Color*>(malloc(sizeof(Color) * pixelCount)), 0, pixelCount};
 }
 
-inline void ReleaseBuffer(RenderBuffer& buffer) { free(buffer.buffer); }
+inline void ReleaseBuffer(RenderBuffer& buffer)
+{
+    free(buffer.buffer);
+}
 
 #endif // UTILS_H

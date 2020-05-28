@@ -94,7 +94,7 @@ glm::vec3 TracePath(const Ray& ray, uint32_t maxDepth, const Scene& scene)
         }
     }
 
-    return scene.backgroundColor;
+    return scene.settings.backgroundColor;
 }
 
 } // namespace
@@ -203,7 +203,6 @@ void RenderSceneMT(const Scene& scene, RenderBuffer& renderBuffer, uint32_t thre
     }
 
 #else
-
     uint32_t pixelCountPerThread = renderBuffer.length / threadCount;
 
     std::vector<std::thread> threads;
