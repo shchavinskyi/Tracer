@@ -3,30 +3,29 @@
 #include "data.h"
 #include "random.h"
 
+#include <optional>
+
 namespace {
 
-bool Diffuse(const HitResult& hitResult, const Material::DiffuseData& data, ScatterResult& scatterResult)
+ScatterResult Diffuse(const HitResult& hitResult, const Material::DiffuseData& data)
 {
     static RandomUnitVectorGenerator unitGenerator;
 
     glm::vec3 target = hitResult.position + hitResult.normal + unitGenerator.Generate();
 
-    scatterResult.ray.origin = hitResult.position;
-    scatterResult.ray.direction = glm::normalize(target - hitResult.position);
-    scatterResult.attenuation = data.albedo;
-
-    return true;
+    return ScatterResult{Ray{hitResult.position, glm::normalize(target - hitResult.position)}, data.albedo};
 }
 
-bool Metal(const Ray& inRay, const HitResult& hitResult, const Material::MetalData& data, ScatterResult& scatterResult)
+std::optional<ScatterResult> Metal(const Ray& inRay, const HitResult& hitResult, const Material::MetalData& data)
 {
     static RandomInUnitSphereGenerator generator;
 
     glm::vec3 reflected = glm::reflect(inRay.direction, hitResult.normal);
-    scatterResult.ray.origin = hitResult.position;
-    scatterResult.ray.direction = glm::normalize(reflected + data.fuzziness * generator.Generate());
-    scatterResult.attenuation = data.albedo;
-    return glm::dot(reflected, hitResult.normal) > 0.0f;
+    return glm::dot(reflected, hitResult.normal) < 0.0f
+               ? std::nullopt
+               : std::make_optional(ScatterResult{
+                     Ray{hitResult.position, glm::normalize(reflected + data.fuzziness * generator.Generate())},
+                     data.albedo});
 }
 
 float Schlick(float cosine, float refractIndex)
@@ -36,8 +35,8 @@ float Schlick(float cosine, float refractIndex)
     return r0 + (1.0f - r0) * pow((1.0f - cosine), 5.0f);
 }
 
-bool Dielectric(const Ray& inRay, const HitResult& hitResult, const Material::DielectricData& data,
-                ScatterResult& scatterResult)
+std::optional<ScatterResult> Dielectric(const Ray& inRay, const HitResult& hitResult,
+                                        const Material::DielectricData& data)
 {
     glm::vec3 normal = hitResult.normal;
     float refractIndex = 0.0f;
@@ -55,10 +54,12 @@ bool Dielectric(const Ray& inRay, const HitResult& hitResult, const Material::Di
         static RandomInUnitSphereGenerator generator;
 
         glm::vec3 reflected = glm::reflect(inRay.direction, normal);
-        scatterResult.ray.origin = hitResult.position;
-        scatterResult.ray.direction = glm::normalize(reflected + data.fuzziness * generator.Generate());
-        scatterResult.attenuation = data.albedo;
-        return glm::dot(reflected, normal) > 0.0f;
+
+        return glm::dot(reflected, normal) < 0.0f
+                   ? std::nullopt
+                   : std::make_optional(ScatterResult{
+                         Ray{hitResult.position, glm::normalize(reflected + data.fuzziness * generator.Generate())},
+                         data.albedo});
     }
 
     static RandomFloatGenerator generator;
@@ -67,17 +68,14 @@ bool Dielectric(const Ray& inRay, const HitResult& hitResult, const Material::Di
     if (generator.Generate() < reflectProb)
     {
         glm::vec3 reflected = glm::reflect(inRay.direction, normal);
-        scatterResult.ray.origin = hitResult.position;
-        scatterResult.ray.direction = glm::normalize(reflected + data.fuzziness * generator.Generate());
-        scatterResult.attenuation = data.albedo;
-        return true;
+
+        return ScatterResult{Ray{hitResult.position, glm::normalize(reflected + data.fuzziness * generator.Generate())},
+                             data.albedo};
     }
 
     glm::vec3 refracted = glm::refract(inRay.direction, normal, refractIndex);
-    scatterResult.ray.direction = refracted;
-    scatterResult.ray.origin = hitResult.position;
-    scatterResult.attenuation = glm::vec3(1.0f, 1.0f, 1.0f);
-    return true;
+
+    return ScatterResult{Ray{hitResult.position, glm::normalize(refracted)}, glm::vec3(1.0f, 1.0f, 1.0f)};
 }
 
 template <class... Ts>
@@ -91,17 +89,15 @@ overloaded(Ts...)->overloaded<Ts...>;
 
 } // namespace
 
-bool Scatter(const Ray& inRay, const HitResult& hitResult, const Material& material, ScatterResult& scatterResult)
+std::optional<ScatterResult> Scatter(const Ray& inRay, const HitResult& hitResult, const Material& material)
 {
-    return std::visit(overloaded{[&hitResult, &scatterResult](const Material::DiffuseData& data) {
-                                     return Diffuse(hitResult, data, scatterResult);
-                                 },
-                                 [&inRay, &hitResult, &scatterResult](const Material::MetalData& data) {
-                                     return Metal(inRay, hitResult, data, scatterResult);
-                                 },
-                                 [&inRay, &hitResult, &scatterResult](const Material::DielectricData& data) {
-                                     return Dielectric(inRay, hitResult, data, scatterResult);
-                                 },
-                                 [](auto) { return false; }},
-                      material.data);
+    return std::visit(
+        overloaded{
+            [&hitResult](const Material::DiffuseData& data) -> std::optional<ScatterResult> {
+                return Diffuse(hitResult, data);
+            },
+            [&inRay, &hitResult](const Material::MetalData& data) { return Metal(inRay, hitResult, data); },
+            [&inRay, &hitResult](const Material::DielectricData& data) { return Dielectric(inRay, hitResult, data); },
+            [](auto) -> std::optional<ScatterResult> { return std::nullopt; }},
+        material.data);
 }

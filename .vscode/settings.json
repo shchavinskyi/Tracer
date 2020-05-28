@@ -71,7 +71,8 @@
         "condition_variable": "cpp",
         "future": "cpp",
         "resumable": "cpp",
-        "variant": "cpp"
+        "variant": "cpp",
+        "optional": "cpp"
     },
     "editor.tabSize": 4,
     "editor.insertSpaces": true,
@@ -84,15 +85,6 @@
     "clang-tidy.lintOnSave": true,
     "clang-tidy.checks": [
         "clang-analyzer-*",
-        "cppcoreguidelines-*",
-        "-cppcoreguidelines-avoid-magic-numbers",
-        "-cppcoreguidelines-pro-bounds-constant-array-index",
-        "-cppcoreguidelines-pro-type-vararg",
-        "-cppcoreguidelines-macro-usage",
-        "-cppcoreguidelines-no-malloc",
-        "-cppcoreguidelines-owning-memory",
-        "-cppcoreguidelines-pro-type-union-access",
-        "-cppcoreguidelines-pro-bounds-pointer-arithmetic",
         "llvm-*",
         "-llvm-header-guard",
         "-clang-diagnostic-unused-macros",

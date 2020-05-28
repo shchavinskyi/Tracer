@@ -30,12 +30,6 @@ struct HitResult
     uint32_t materialId;
 };
 
-struct ScatterResult
-{
-    Ray ray;
-    glm::vec3 attenuation;
-};
-
 struct Color
 {
     uint8_t r;

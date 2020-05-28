@@ -81,16 +81,16 @@ glm::vec3 TracePath(const Ray& ray, uint32_t maxDepth, const Scene& scene)
 
     if (isHit)
     {
-        ScatterResult scatterResult;
 
         const Material& material = scene.materials[hitResult.materialId];
         if (const Material::LightData* data = std::get_if<Material::LightData>(&material.data))
         {
             return data->emissive;
         }
-        else if (Scatter(ray, hitResult, material, scatterResult))
+
+        if (std::optional<ScatterResult> scatterResult = Scatter(ray, hitResult, material))
         {
-            return scatterResult.attenuation * TracePath(scatterResult.ray, maxDepth - 1, scene);
+            return scatterResult->attenuation * TracePath(scatterResult->ray, maxDepth - 1, scene);
         }
     }
 

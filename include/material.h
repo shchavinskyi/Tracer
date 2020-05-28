@@ -1,12 +1,11 @@
 #ifndef MATERIAL_H
 #define MATERIAL_H
 
-#include <glm/vec3.hpp>
-#include <variant>
+#include "data.h"
 
-struct Ray;
-struct HitResult;
-struct ScatterResult;
+#include <glm/vec3.hpp>
+#include <optional>
+#include <variant>
 
 struct Material
 {
@@ -45,7 +44,13 @@ struct Material
     static inline Material CreateLight(const glm::vec3& emissive);
 };
 
-bool Scatter(const Ray& inRay, const HitResult& hitResult, const Material& material, ScatterResult& scatterResult);
+struct ScatterResult
+{
+    Ray ray;
+    glm::vec3 attenuation;
+};
+
+std::optional<ScatterResult> Scatter(const Ray& inRay, const HitResult& hitResult, const Material& material);
 
 // -- inline functions --
 
