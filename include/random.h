@@ -10,8 +10,7 @@ class RandomFloatGenerator
 public:
     RandomFloatGenerator();
     RandomFloatGenerator(float min, float max);
-
-    float Generate() { return distribution(generator); }
+    float Generate();
 
 private:
     float min;
@@ -25,11 +24,7 @@ class RandomVectorGenerator
 public:
     RandomVectorGenerator() = default;
     RandomVectorGenerator(float min, float max);
-
-    glm::vec3 Generate()
-    {
-        return glm::vec3(floatGenerator.Generate(), floatGenerator.Generate(), floatGenerator.Generate());
-    }
+    glm::vec3 Generate();
 
 private:
     RandomFloatGenerator floatGenerator;
@@ -37,49 +32,27 @@ private:
 
 class RandomUnitVectorGenerator
 {
-public:
-    RandomUnitVectorGenerator();
-
-    glm::vec3 Generate()
-    {
-        float a = aGenerator.Generate();
-        float z = zGenerator.Generate();
-        float r = sqrt(1.0f - z * z);
-        return glm::vec3(r * cos(a), r * sin(a), z);
-    }
-
-private:
     RandomFloatGenerator aGenerator;
     RandomFloatGenerator zGenerator;
+
+public:
+    RandomUnitVectorGenerator();
+    glm::vec3 Generate();
 };
 
 class RandomInUnitSphereGenerator
 {
-public:
-    RandomInUnitSphereGenerator();
-
-    glm::vec3 Generate()
-    {
-        while (true)
-        {
-            glm::vec3 p = vectorGenerator.Generate();
-            if (glm::length(p) >= 1.0f)
-            {
-                continue;
-            }
-            return p;
-        }
-    }
-
-private:
     RandomVectorGenerator vectorGenerator;
+
+public:
+    glm::vec3 Generate();
 };
 
 class RandomUnitVectorInHemisphereGenerator
 {
-public:
-    RandomUnitVectorInHemisphereGenerator() = default;
+    RandomInUnitSphereGenerator generator;
 
+public:
     glm::vec3 GenerateFor(const glm::vec3& normal)
     {
         glm::vec3 inUnitSphere = generator.Generate();
@@ -87,14 +60,9 @@ public:
         {
             return inUnitSphere;
         }
-        else
-        {
-            return -inUnitSphere;
-        }
-    }
 
-private:
-    RandomInUnitSphereGenerator generator;
+        return -inUnitSphere;
+    }
 };
 
 #endif // RANDOM_H_

@@ -136,6 +136,8 @@ void RenderScene(const Scene& scene, RenderBuffer renderBuffer)
 
 void RenderSceneMT(const Scene& scene, RenderBuffer& renderBuffer, uint32_t threadCount)
 {
+    LOG_INFO("Render scene using [ %d ] threads.", threadCount);
+
     // 0 threads , 1 async
 #if 1
     constexpr uint32_t pixelCountPerTask = 1024;

@@ -21,9 +21,19 @@ RandomFloatGenerator::RandomFloatGenerator(float inMin, float inMax)
 {
 }
 
+float RandomFloatGenerator::Generate()
+{
+    return distribution(generator);
+}
+
 RandomVectorGenerator::RandomVectorGenerator(float min, float max)
     : floatGenerator(min, max)
 {
+}
+
+glm::vec3 RandomVectorGenerator::Generate()
+{
+    return glm::vec3(floatGenerator.Generate(), floatGenerator.Generate(), floatGenerator.Generate());
 }
 
 RandomUnitVectorGenerator::RandomUnitVectorGenerator()
@@ -32,7 +42,23 @@ RandomUnitVectorGenerator::RandomUnitVectorGenerator()
 {
 }
 
-RandomInUnitSphereGenerator::RandomInUnitSphereGenerator()
-    : vectorGenerator(-1.0f, 1.0f)
+glm::vec3 RandomUnitVectorGenerator::Generate()
 {
+    float a = aGenerator.Generate();
+    float z = zGenerator.Generate();
+    float r = sqrt(1.0f - z * z);
+    return glm::vec3(r * cos(a), r * sin(a), z);
+}
+
+glm::vec3 RandomInUnitSphereGenerator::Generate()
+{
+    while (true)
+    {
+        glm::vec3 p = vectorGenerator.Generate();
+        if (glm::length(p) >= 1.0f)
+        {
+            continue;
+        }
+        return p;
+    }
 }

@@ -29,8 +29,6 @@ constexpr std::array<const char*, 5> levelStrings = {" \x1b[37;1m[TRACE]\x1b[0m 
                                                      " \x1b[31;1m[ERROR]\x1b[0m "};
 constexpr std::size_t levelStringLength = 20;
 
-#define LOGGING_LEVEL_ALL
-
 // All, something in between, none or default to info
 #if defined(LOGGING_LEVEL_DEBUG)
 constexpr LogLevel LOG_LEVEL_CUTOFF = LogLevel::DEBUG;
@@ -42,6 +40,8 @@ constexpr LogLevel LOG_LEVEL_CUTOFF = LogLevel::ERROR;
 constexpr LogLevel LOG_LEVEL_CUTOFF = LogLevel::ERROR + 1;
 #elif defined(LOGGING_LEVEL_INFO)
 constexpr LogLevel LOG_LEVEL_CUTOFF = LogLevel::INFO;
+#else
+#define LOGGING_LEVEL_ALL
 #endif
 
 inline std::size_t FillTimestamp(char* buffer)
@@ -78,7 +78,7 @@ inline std::size_t FillTimestamp(char* buffer)
 template <typename... Args>
 void Log(const LogLevel level, const char* message, Args... args)
 {
-#if !defined(LOGGING_LEVEL_ALL) && !defined(LOGGING_LEVEL_TRACE)
+#if !defined(LOGGING_LEVEL_ALL)
     // Cut off only if needed
     if (level < LOG_LEVEL_CUTOFF)
         return;

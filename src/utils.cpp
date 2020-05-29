@@ -25,8 +25,21 @@ Camera CameraFromView(const glm::vec3& lookFrom, const glm::vec3& lookAt, const 
     return Camera{lookFrom, lookFrom - halfWidth * u - halfHeight * v - w, two * halfWidth * u, two * halfHeight * v};
 }
 
+RenderBuffer CreateImageBuffer(const ImageSize& size)
+{
+    const uint32_t pixelCount = size.width * size.height;
+    return RenderBuffer{static_cast<Color*>(malloc(sizeof(Color) * pixelCount)), 0, pixelCount};
+}
+
+void ReleaseBuffer(RenderBuffer& buffer)
+{
+    free(buffer.buffer);
+}
+
 void GenerateRandomScene(Scene& scene, uint32_t sphereCount, uint32_t materialCount)
 {
+    assert(materialCount > 0);
+
     RandomFloatGenerator floatGenerator;
     RandomVectorGenerator colorGenerator(0.0f, 1.0f);
 
@@ -38,10 +51,10 @@ void GenerateRandomScene(Scene& scene, uint32_t sphereCount, uint32_t materialCo
     const float fov = 45.0f;
     scene.camera = CameraFromView(cameraPosition, at, up, fov, aspectRatio);
 
-    scene.settings.backgroundColor = glm::vec3(0.5f, 0.7f, 1.0f);
+    scene.settings.backgroundColor = glm::vec3(0.2f, 0.3f, 0.5f);
 
-    AddSphereAndMaterial(scene, Sphere{glm::vec3(0.0f, 0.0f, 5.0f), 2.0f},
-                         Material::CreateLight(glm::vec3(1.0f, 1.0f, 1.0f)));
+    AddSphereAndMaterial(scene, Sphere{glm::vec3(1.0f, 0.0f, 7.5f), 3.0f},
+                         Material::CreateLight(glm::vec3(4.0f, 4.0f, 4.0f)));
 
     uint32_t matId = AddMaterial(scene, Material::CreateDiffuse(glm::vec3(0.8f, 0.8f, 0.0f)));
     float rectWidth = 8.0f;
@@ -71,14 +84,14 @@ void GenerateRandomScene(Scene& scene, uint32_t sphereCount, uint32_t materialCo
                          glm::vec3(rectWidth, 1.0f * rectWidth2, 0.0f)},
                 matId);
 
-    uint32_t fixedMaterials = static_cast<uint32_t>(scene.materials.size());
+    const uint32_t fixedMaterials = static_cast<uint32_t>(scene.materials.size());
 
     // Generate materials
-    for (uint32_t i = 0; i < materialCount - fixedMaterials; ++i)
+    for (uint32_t i = 0; i < materialCount; ++i)
     {
-        glm::vec3 randomColor = colorGenerator.Generate();
+        const glm::vec3 randomColor = colorGenerator.Generate();
 
-        float materialFactor = floatGenerator.Generate();
+        const float materialFactor = floatGenerator.Generate();
 
         Material randomMaterial;
         if (materialFactor < 0.4f)
@@ -98,14 +111,11 @@ void GenerateRandomScene(Scene& scene, uint32_t sphereCount, uint32_t materialCo
     }
 
     constexpr float width = 3.0f;
-    constexpr float minRadiuswidth = 0.1f;
+    constexpr float minRadiuswidth = 0.2f;
     constexpr float maxRadiuswidth = 0.5f;
 
-    uint32_t randomMaterailsCount = static_cast<uint32_t>(scene.materials.size()) - fixedMaterials;
-    assert(randomMaterailsCount > 0);
-
     // Generate spheres
-    for (uint32_t i = 0; i < sphereCount - 1; ++i)
+    for (uint32_t i = 0; i < sphereCount; ++i)
     {
         glm::vec3 position;
         position.x = (floatGenerator.Generate() * width * 2.0f) - width;
@@ -113,7 +123,7 @@ void GenerateRandomScene(Scene& scene, uint32_t sphereCount, uint32_t materialCo
         float radius = floatGenerator.Generate() * (maxRadiuswidth - minRadiuswidth) + minRadiuswidth;
         position.z = radius;
 
-        uint32_t randomMatId = uint32_t(rand() % int(randomMaterailsCount)) + fixedMaterials;
+        const uint32_t randomMatId = uint32_t(rand() % int(materialCount)) + fixedMaterials;
 
         AddSphere(scene, Sphere{position, radius}, randomMatId);
     }
@@ -151,14 +161,14 @@ void CornellBox(Scene& scene)
     AddXZRect(scene, glm::vec3(0.0f, boxWidth, 0.0f), glm::vec3(boxWidth, boxWidth, boxWidth), white);
 
     // Add light
-    constexpr float lightWidth = 200.0f;
+    constexpr float lightWidth = 180.0f;
     constexpr float lowCorner = (boxWidth - lightWidth) / 2.0f;
     constexpr float HighCorner = (boxWidth + lightWidth) / 2.0f;
-    AddXYRect(scene, glm::vec3(lowCorner, lowCorner, boxWidth - 0.1f),
-              glm::vec3(HighCorner, HighCorner, boxWidth - 0.1f), light, true);
+    AddXYRect(scene, glm::vec3(lowCorner, lowCorner, boxWidth - 2.0f),
+              glm::vec3(HighCorner, HighCorner, boxWidth - 2.0f), light, true);
 
     constexpr float radius = 80.0f;
-    AddSphereAndMaterial(scene, Sphere{glm::vec3(boxHalfWidth - 10.0f, boxHalfWidth + 100.0f, radius), radius},
+    AddSphereAndMaterial(scene, Sphere{glm::vec3(boxHalfWidth + 5.0f, boxHalfWidth + 100.0f, radius), radius},
                          Material::CreateMetal(glm::vec3(0.73f, 0.73f, 0.73f), 0.0f));
 
     AddSphereAndMaterial(scene, Sphere{glm::vec3(boxHalfWidth + 120.0f, boxHalfWidth - 40.0f, radius), radius},

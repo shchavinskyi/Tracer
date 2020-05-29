@@ -10,7 +10,6 @@ namespace {
 ScatterResult Diffuse(const HitResult& hitResult, const Material::DiffuseData& data)
 {
     static RandomUnitVectorGenerator unitGenerator;
-
     glm::vec3 target = hitResult.position + hitResult.normal + unitGenerator.Generate();
 
     return ScatterResult{Ray{hitResult.position, glm::normalize(target - hitResult.position)}, data.albedo};

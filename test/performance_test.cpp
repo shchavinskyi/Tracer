@@ -3,7 +3,7 @@
 
 #include <thread>
 
-TEST_CASE("logger single-thread performance")
+TEST_CASE("logger_performance")
 {
     TRACE_EXECUTION("Logging single thread performance");
 
@@ -15,7 +15,7 @@ TEST_CASE("logger single-thread performance")
     }
 }
 
-TEST_CASE("logger multi-thread performance")
+TEST_CASE("logger_mt_performance")
 {
     TRACE_EXECUTION("Logging multi-thread performance");
 
