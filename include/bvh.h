@@ -17,15 +17,9 @@ struct Aabb
 
 struct BVHNode
 {
-    BVHNode()
-        : leftNodeIndex(0)
-        , rightNodeIndex(std::numeric_limits<uint32_t>::max())
-    {
-    }
-
     Aabb aabb;
-    uint32_t leftNodeIndex;
-    uint32_t rightNodeIndex;
+    uint32_t leftNodeIndex = 0;
+    uint32_t rightNodeIndex = std::numeric_limits<uint32_t>::max();
 };
 
 struct BVHTree
@@ -69,11 +63,20 @@ inline bool BoxCompare(const Sphere& left, const Sphere& right, int axis)
     return leftBox.min[axis] < rightBox.min[axis];
 }
 
-inline bool BoxXCompare(const Sphere& left, const Sphere& right) { return BoxCompare(left, right, 0); }
+inline bool BoxXCompare(const Sphere& left, const Sphere& right)
+{
+    return BoxCompare(left, right, 0);
+}
 
-inline bool BoxYCompare(const Sphere& left, const Sphere& right) { return BoxCompare(left, right, 1); }
+inline bool BoxYCompare(const Sphere& left, const Sphere& right)
+{
+    return BoxCompare(left, right, 1);
+}
 
-inline bool BoxZCompare(const Sphere& left, const Sphere& right) { return BoxCompare(left, right, 2); }
+inline bool BoxZCompare(const Sphere& left, const Sphere& right)
+{
+    return BoxCompare(left, right, 2);
+}
 
 BVHNode CreateNode(BVHTree& tree, std::vector<Sphere>& spheres, std::uint32_t start, std::uint32_t end);
 

@@ -94,7 +94,7 @@ glm::vec3 TracePath(const Ray& ray, uint32_t maxDepth, const Scene& scene)
         }
     }
 
-    return scene.settings.backgroundColor;
+    return scene.backgroundColor;
 }
 
 } // namespace
@@ -136,7 +136,7 @@ void RenderScene(const Scene& scene, RenderBuffer renderBuffer)
 
 void RenderSceneMT(const Scene& scene, RenderBuffer& renderBuffer, uint32_t threadCount)
 {
-    LOG_INFO("Render scene using [ %d ] threads.", threadCount);
+    LOG_INFO("Rendering scene using [ %d ] threads.", threadCount);
 
     // 0 threads , 1 async
 #if 1

@@ -1,39 +1,58 @@
+#include "logging.h"
 #include "render.h"
 #include "save.h"
 #include "scene.h"
 #include "test.h"
 #include "utils.h"
 
+#include <array>
 #include <thread>
 
-TEST_CASE("scene_cornell_box")
+namespace {
+template <std::size_t N>
+void RenderTest(const std::array<Settings, N>& testSettings, std::string_view testName,
+                const std::function<void(Scene&)>& fillSceneFunction)
 {
     Scene scene;
 
-    CornellBox(scene);
+    // Call fill function
+    fillSceneFunction(scene);
 
-    RenderBuffer imageBuffer = CreateImageBuffer(scene.settings.imageSize);
+    std::for_each(begin(testSettings), end(testSettings), [&](const Settings& settings) {
+        std::string caseName(testName);
+        caseName.append("_");
+        caseName.append(settingToString(settings));
 
-    RenderSceneMT(scene, imageBuffer);
+        TRACE_EXECUTION(caseName.data());
+        LOG_INFO("Rendering test [%s]", caseName.data());
 
-    SaveImageBufferToFile(imageBuffer, scene.settings.imageSize, "output_cornell_box.png");
+        // Assign settings
+        scene.settings = settings;
 
-    ReleaseBuffer(imageBuffer);
+        RenderBuffer imageBuffer = CreateImageBuffer(settings.imageSize);
+
+        RenderSceneMT(scene, imageBuffer);
+
+        SaveImageBufferToFile(imageBuffer, scene.settings.imageSize, std::string("output_" + caseName + ".png"));
+
+        ReleaseBuffer(imageBuffer);
+    });
+}
+
+const std::array<Settings, 3> testSettings = {Settings{{400, 400}, 200, 5}, Settings{{400, 400}, 500, 10},
+                                              Settings{{400, 400}, 2000, 10}};
+} // namespace
+
+TEST_CASE("scene_cornell_box")
+{
+    RenderTest(testSettings, "cornell_box", [](Scene& scene) { CornellBox(scene); });
 }
 
 TEST_CASE("scene_random")
 {
-    Scene scene;
-
-    constexpr uint32_t sphereCount = 20;
-    constexpr uint32_t materialCount = 8;
-    GenerateRandomScene(scene, sphereCount, materialCount);
-
-    RenderBuffer imageBuffer = CreateImageBuffer(scene.settings.imageSize);
-
-    RenderSceneMT(scene, imageBuffer);
-
-    SaveImageBufferToFile(imageBuffer, scene.settings.imageSize, "output_random.png");
-
-    ReleaseBuffer(imageBuffer);
+    RenderTest(testSettings, "random", [](Scene& scene) {
+        constexpr uint32_t sphereCount = 20;
+        constexpr uint32_t materialCount = 8;
+        GenerateRandomScene(scene, sphereCount, materialCount);
+    });
 }

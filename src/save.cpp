@@ -32,11 +32,11 @@
 
 #endif
 
-void SaveImageBufferToFile(const RenderBuffer& renderBuffer, const ImageSize& size, const std::string& filename)
+void SaveImageBufferToFile(const RenderBuffer& renderBuffer, const ImageSize& size, std::string_view filename)
 {
     constexpr int numberOfChenels = 3; /* rgb */
-    int result = stbi_write_png(filename.c_str(), int(size.width), int(size.height), numberOfChenels,
+    int result = stbi_write_png(filename.data(), int(size.width), int(size.height), numberOfChenels,
                                 renderBuffer.buffer, int(size.width * numberOfChenels));
 
-    LOG_INFO("Image successfully save to file : %s with result %d", filename.c_str(), result);
+    LOG_INFO("Image successfully save to file : %s with result %d", filename.data(), result);
 }

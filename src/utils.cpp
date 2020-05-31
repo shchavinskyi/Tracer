@@ -2,6 +2,8 @@
 
 #include "random.h"
 
+#include <sstream>
+
 namespace {
 float AspectRatio(const ImageSize& size)
 {
@@ -51,7 +53,7 @@ void GenerateRandomScene(Scene& scene, uint32_t sphereCount, uint32_t materialCo
     const float fov = 45.0f;
     scene.camera = CameraFromView(cameraPosition, at, up, fov, aspectRatio);
 
-    scene.settings.backgroundColor = glm::vec3(0.2f, 0.3f, 0.5f);
+    scene.backgroundColor = glm::vec3(0.25f, 0.25f, 0.5f);
 
     AddSphereAndMaterial(scene, Sphere{glm::vec3(1.0f, 0.0f, 7.5f), 3.0f},
                          Material::CreateLight(glm::vec3(4.0f, 4.0f, 4.0f)));
@@ -142,7 +144,7 @@ void CornellBox(Scene& scene)
     const float fov = 40.0f;
     scene.camera = CameraFromView(cameraPosition, at, up, fov, aspectRatio);
 
-    scene.settings.backgroundColor = glm::vec3(0.0f, 0.0f, 0.0f);
+    scene.backgroundColor = glm::vec3(0.0f, 0.0f, 0.0f);
 
     uint32_t red = AddMaterial(scene, Material::CreateDiffuse(glm::vec3(0.65f, 0.05f, 0.05f)));
     uint32_t white = AddMaterial(scene, Material::CreateDiffuse(glm::vec3(0.73f, 0.73f, 0.73f)));
@@ -176,4 +178,12 @@ void CornellBox(Scene& scene)
 
     AddSphereAndMaterial(scene, Sphere{glm::vec3(radius + 100.0f, boxHalfWidth - 120.0f, radius), radius},
                          Material::CreateDielectric(glm::vec3(0.73f, 0.73f, 0.73f), 0.97f));
+}
+
+std::string settingToString(const Settings& setting)
+{
+    std::stringstream ss;
+    ss << setting.imageSize.width << 'x' << setting.imageSize.height;
+    ss << '_' << setting.samplesPerPixel << '_' << setting.maxBounces;
+    return ss.str();
 }

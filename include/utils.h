@@ -19,4 +19,6 @@ void ReleaseBuffer(RenderBuffer& buffer);
 void GenerateRandomScene(Scene& scene, uint32_t sphereCount, uint32_t materialCount);
 void CornellBox(Scene& scene);
 
+std::string settingToString(const Settings& setting);
+
 #endif // UTILS_H
