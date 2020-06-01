@@ -9,6 +9,20 @@ float AspectRatio(const ImageSize& size)
 {
     return float(size.width) / float(size.height);
 }
+
+bool CanPlaceSphere(const Scene& scene, const Sphere& sphere)
+{
+    for (const Sphere& existSphere : scene.spheresGeometry)
+    {
+        float distance = glm::distance(existSphere.center, sphere.center);
+        if (distance < existSphere.radius + sphere.radius)
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
 } // namespace
 
 Camera CameraFromView(const glm::vec3& lookFrom, const glm::vec3& lookAt, const glm::vec3& up,
@@ -96,11 +110,11 @@ void GenerateRandomScene(Scene& scene, uint32_t sphereCount, uint32_t materialCo
         const float materialFactor = floatGenerator.Generate();
 
         Material randomMaterial;
-        if (materialFactor < 0.4f)
+        if (materialFactor < 0.45f)
         {
             randomMaterial = Material::CreateDiffuse(randomColor);
         }
-        else if (materialFactor > 0.6f)
+        else if (materialFactor > 0.55f)
         {
             randomMaterial = Material::CreateMetal(randomColor, floatGenerator.Generate());
         }
@@ -114,10 +128,10 @@ void GenerateRandomScene(Scene& scene, uint32_t sphereCount, uint32_t materialCo
 
     constexpr float width = 3.0f;
     constexpr float minRadiuswidth = 0.2f;
-    constexpr float maxRadiuswidth = 0.5f;
+    constexpr float maxRadiuswidth = 0.65f;
 
     // Generate spheres
-    for (uint32_t i = 0; i < sphereCount; ++i)
+    for (uint32_t i = 0; i < sphereCount;)
     {
         glm::vec3 position;
         position.x = (floatGenerator.Generate() * width * 2.0f) - width;
@@ -125,9 +139,13 @@ void GenerateRandomScene(Scene& scene, uint32_t sphereCount, uint32_t materialCo
         float radius = floatGenerator.Generate() * (maxRadiuswidth - minRadiuswidth) + minRadiuswidth;
         position.z = radius;
 
-        const uint32_t randomMatId = uint32_t(rand() % int(materialCount)) + fixedMaterials;
-
-        AddSphere(scene, Sphere{position, radius}, randomMatId);
+        Sphere sphere{position, radius};
+        if (CanPlaceSphere(scene, sphere))
+        {
+            const uint32_t randomMatId = uint32_t(rand() % int(materialCount)) + fixedMaterials;
+            AddSphere(scene, sphere, randomMatId);
+            ++i;
+        }
     }
 }
 

@@ -33,14 +33,14 @@ void RenderTest(const std::array<Settings, N>& testSettings, std::string_view te
 
         RenderSceneMT(scene, imageBuffer);
 
-        SaveImageBufferToFile(imageBuffer, scene.settings.imageSize, std::string("output_" + caseName + ".png"));
+        SaveImageBufferToFile(imageBuffer, scene.settings.imageSize, std::string("output/" + caseName + ".png"));
 
         ReleaseBuffer(imageBuffer);
     });
 }
 
-const std::array<Settings, 3> testSettings = {Settings{{400, 400}, 200, 5}, Settings{{400, 400}, 500, 10},
-                                              Settings{{400, 400}, 2000, 10}};
+constexpr std::array<Settings, 4> testSettings = {Settings{{400, 400}, 200, 5}, Settings{{400, 400}, 500, 10},
+                                                  Settings{{400, 400}, 2000, 10}, Settings{{400, 400}, 10000, 10}};
 } // namespace
 
 TEST_CASE("scene_cornell_box")
@@ -51,8 +51,8 @@ TEST_CASE("scene_cornell_box")
 TEST_CASE("scene_random")
 {
     RenderTest(testSettings, "random", [](Scene& scene) {
-        constexpr uint32_t sphereCount = 20;
-        constexpr uint32_t materialCount = 8;
+        constexpr uint32_t sphereCount = 30;
+        constexpr uint32_t materialCount = 7;
         GenerateRandomScene(scene, sphereCount, materialCount);
     });
 }
