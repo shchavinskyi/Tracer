@@ -6,6 +6,7 @@
 #include "utils.h"
 
 #include <array>
+#include <functional>
 #include <thread>
 
 namespace {

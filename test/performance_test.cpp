@@ -2,6 +2,7 @@
 #include "test.h"
 
 #include <thread>
+#include <vector>
 
 TEST_CASE("logger_performance")
 {

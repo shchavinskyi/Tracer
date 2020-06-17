@@ -1,12 +1,15 @@
 #ifndef LOGGER_H
 #define LOGGER_H
 
+#include <cstdint>
+#include <cstdlib>
 #ifdef _MSC_VER
 #pragma warning(disable : 4996)
 #endif
 
 #include <array>
 #include <chrono>
+#include <cstring>
 #include <ctime>
 #include <iostream>
 #include <sstream>
@@ -44,16 +47,16 @@ constexpr LogLevel LOG_LEVEL_CUTOFF = LogLevel::INFO;
 #define LOGGING_LEVEL_ALL
 #endif
 
-inline std::size_t FillTimestamp(char* buffer)
+inline int32_t FillTimestamp(char* buffer)
 {
     using namespace std::chrono;
 
     //
     // >>|23/05/20 19:34:13 997 |<< 22 characters + '\0'
     //
-    constexpr std::size_t timestampLenght = 23;
-    constexpr std::size_t fractionLenght = 5;
-    constexpr std::size_t timeLenght = timestampLenght - fractionLenght;
+    constexpr int32_t timestampLenght = 23;
+    constexpr int32_t fractionLenght = 5;
+    constexpr int32_t timeLenght = timestampLenght - fractionLenght;
 
     system_clock::time_point tp = system_clock::now();
 
@@ -70,7 +73,8 @@ inline std::size_t FillTimestamp(char* buffer)
 #endif
 
     strftime(buffer, timeLenght, "%d/%m/%y %H:%M:%S", &newtime);
-    snprintf(&buffer[timeLenght - 1], fractionLenght, " %03d", fractionalMS);
+
+    snprintf(&buffer[timeLenght - 1], fractionLenght, " %03d", fractionalMS) < 0 ? abort() : (void)0;
 
     return timestampLenght - 1;
 }
@@ -87,12 +91,12 @@ void Log(const LogLevel level, const char* message, Args... args)
     constexpr uint32_t maxLogLength = 256;
     std::array<char, maxLogLength> buffer = {'\0'};
 
-    std::size_t bufferIndex = FillTimestamp(&buffer.front()) - 1;
+    int32_t bufferIndex = FillTimestamp(&buffer.front()) - 1;
 
-    strncpy(&buffer[bufferIndex], levelStrings[static_cast<std::size_t>(level)], levelStringLength);
+    strncpy(&buffer[bufferIndex], levelStrings[std::size_t(level)], levelStringLength);
     bufferIndex += levelStringLength;
 
-    bufferIndex += std::size_t(snprintf(&buffer[bufferIndex], maxLogLength - bufferIndex - 2, message, args...));
+    bufferIndex += snprintf(&buffer[bufferIndex], maxLogLength - bufferIndex - 2, message, args...);
 
     buffer[bufferIndex] = '\n';
     buffer[bufferIndex + 1] = '\0';
