@@ -263,11 +263,11 @@ bool LoadMeshToScene(Scene& scene, float scale, const glm::vec3& offset, const u
 
     if (!warn.empty())
     {
-        WARN(warn.c_str());
+        WARN("%s", warn.c_str());
     }
     if (!err.empty())
     {
-        ERROR(err.c_str());
+        ERROR("%s", err.c_str());
     }
     if (!ret)
     {
