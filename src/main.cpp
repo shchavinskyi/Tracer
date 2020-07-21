@@ -8,7 +8,7 @@ int main(int /*argc*/, char** /*argv*/)
 {
     Scene scene;
 
-    CornellBox(scene);
+    GenerateCornellBox(scene);
 
     RenderBuffer imageBuffer = CreateImageBuffer(scene.settings.imageSize);
     {

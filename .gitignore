@@ -42,3 +42,4 @@ compile_commands.json
 .vs/ProjectSettings.json
 .vs/VSWorkspaceState.json
 output/*
+.vscode/launch.json

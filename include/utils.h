@@ -17,8 +17,13 @@ void ReleaseBuffer(RenderBuffer& buffer);
 
 // Scene sample generators
 void GenerateRandomScene(Scene& scene, uint32_t sphereCount, uint32_t materialCount);
-void CornellBox(Scene& scene);
+void GenerateBox(Scene& scene, float boxWidth);
+void GenerateCornellBox(Scene& scene);
 
-std::string settingToString(const Settings& setting);
+std::string SettingToString(const Settings& setting);
+
+// Load mesh to scene
+bool LoadMeshToScene(Scene& scene, float scale, const glm::vec3& offset, const uint32_t matId,
+                     const std::string& filename);
 
 #endif // UTILS_H

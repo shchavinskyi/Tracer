@@ -1,6 +1,10 @@
 #include "utils.h"
 
+#include "logging.h"
 #include "random.h"
+
+#define TINYOBJLOADER_IMPLEMENTATION
+#include "tiny_obj_loader.h"
 
 #include <sstream>
 
@@ -149,7 +153,46 @@ void GenerateRandomScene(Scene& scene, uint32_t sphereCount, uint32_t materialCo
     }
 }
 
-void CornellBox(Scene& scene)
+void GenerateBox(Scene& scene, float boxWidth)
+{
+    const float boxHalfWidth = boxWidth / 2.0f;
+
+    glm::vec3 cameraPosition(boxHalfWidth, -800.0f, boxHalfWidth);
+    glm::vec3 at(boxHalfWidth, 0.0f, boxHalfWidth);
+    glm::vec3 up(0.0f, 0.0f, 1.0f);
+
+    const float aspectRatio = AspectRatio(scene.settings.imageSize);
+    const float fov = 40.0f;
+    scene.camera = CameraFromView(cameraPosition, at, up, fov, aspectRatio);
+
+    scene.backgroundColor = glm::vec3(0.0f, 0.0f, 0.0f);
+
+    uint32_t red = AddMaterial(scene, Material::CreateDiffuse(glm::vec3(0.65f, 0.05f, 0.05f)));
+    uint32_t white = AddMaterial(scene, Material::CreateDiffuse(glm::vec3(0.73f, 0.73f, 0.73f)));
+    uint32_t green = AddMaterial(scene, Material::CreateDiffuse(glm::vec3(0.12f, 0.45f, 0.15f)));
+    uint32_t light = AddMaterial(scene, Material::CreateLight(glm::vec3(12.0f, 12.0f, 12.0f)));
+
+    // bottom
+    AddXYRect(scene, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(boxWidth, boxWidth, 0.0f), white);
+    // top
+    AddXYRect(scene, glm::vec3(0.0f, 0.0f, boxWidth), glm::vec3(boxWidth, boxWidth, boxWidth), white, true);
+    // left
+    AddYZRect(scene, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, boxWidth, boxWidth), green);
+    // right
+    AddYZRect(scene, glm::vec3(boxWidth, 0.0f, 0.0f), glm::vec3(boxWidth, boxWidth, boxWidth), red, true);
+    // back
+    AddXZRect(scene, glm::vec3(0.0f, boxWidth, 0.0f), glm::vec3(boxWidth, boxWidth, boxWidth), white);
+
+    // Add light
+    constexpr float lightWidth = 180.0f;
+    constexpr float offset = -100.0f;
+    const float lowCorner = (boxWidth - lightWidth) / 2.0f;
+    const float HighCorner = (boxWidth + lightWidth) / 2.0f;
+    AddXYRect(scene, glm::vec3(lowCorner, lowCorner + offset, boxWidth - 2.0f),
+              glm::vec3(HighCorner, HighCorner + offset, boxWidth - 2.0f), light, true);
+}
+
+void GenerateCornellBox(Scene& scene)
 {
     constexpr float boxWidth = 555.0f;
     constexpr float boxHalfWidth = boxWidth / 2.0f;
@@ -198,10 +241,77 @@ void CornellBox(Scene& scene)
                          Material::CreateDielectric(glm::vec3(0.73f, 0.73f, 0.73f), 0.97f));
 }
 
-std::string settingToString(const Settings& setting)
+std::string SettingToString(const Settings& setting)
 {
     std::stringstream ss;
     ss << setting.imageSize.width << 'x' << setting.imageSize.height;
     ss << '_' << setting.samplesPerPixel << '_' << setting.maxBounces;
     return ss.str();
+}
+
+bool LoadMeshToScene(Scene& scene, float scale, const glm::vec3& offset, const uint32_t matId,
+                     const std::string& filename)
+{
+    using namespace tinyobj;
+
+    std::string warn;
+    std::string err;
+    attrib_t attrib;
+    std::vector<shape_t> shapes;
+    std::vector<material_t> materials;
+    bool ret = LoadObj(&attrib, &shapes, &materials, &warn, &err, filename.c_str());
+
+    if (!warn.empty())
+    {
+        WARN(warn.c_str());
+    }
+    if (!err.empty())
+    {
+        ERROR(err.c_str());
+    }
+    if (!ret)
+    {
+        ERROR("Failed to load %s", filename.c_str());
+        return ret;
+    }
+
+    LOG_INFO("# of vertices  = %d", (int)(attrib.vertices.size()) / 3);
+    LOG_INFO("# of normals   = %d", (int)(attrib.normals.size()) / 3);
+    LOG_INFO("# of texcoords = %d", (int)(attrib.texcoords.size()) / 2);
+    LOG_INFO("# of materials = %d", (int)materials.size());
+    LOG_INFO("# of shapes    = %d", (int)shapes.size());
+
+    // TODO read material from mesh object
+
+    for (shape_t& shape : shapes)
+    {
+        mesh_t& mesh = shape.mesh;
+
+        for (std::size_t i = 0; i < mesh.indices.size() - 2; i += 3)
+        {
+            index_t& a = mesh.indices[i];
+            index_t& b = mesh.indices[i + 1];
+            index_t& c = mesh.indices[i + 2];
+
+            real_t ax = attrib.vertices[3 * a.vertex_index];
+            real_t ay = attrib.vertices[3 * a.vertex_index + 1];
+            real_t az = attrib.vertices[3 * a.vertex_index + 2];
+
+            real_t bx = attrib.vertices[3 * b.vertex_index];
+            real_t by = attrib.vertices[3 * b.vertex_index + 1];
+            real_t bz = attrib.vertices[3 * b.vertex_index + 2];
+
+            real_t cx = attrib.vertices[3 * c.vertex_index];
+            real_t cy = attrib.vertices[3 * c.vertex_index + 1];
+            real_t cz = attrib.vertices[3 * c.vertex_index + 2];
+
+            glm::vec3 va{ax * scale, ay * scale, az * scale};
+            glm::vec3 vb{bx * scale, by * scale, bz * scale};
+            glm::vec3 vc{cx * scale, cy * scale, cz * scale};
+
+            AddTriangle(scene, Triangle{offset + va, offset + vb, offset + vc}, matId);
+        }
+    }
+
+    return ret;
 }

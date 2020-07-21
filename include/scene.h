@@ -22,7 +22,7 @@ struct Settings
 
 inline Settings DefaultSettings()
 {
-    return Settings{{400, 400}, 250, 5};
+    return Settings{{400, 400}, 250, 4};
 }
 
 struct Scene

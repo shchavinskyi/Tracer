@@ -54,6 +54,7 @@ set(LIB_NAME tracer-lib)
 set(EXTERNAL_LIBS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external)
 
 include_directories(include)
+include_directories(${EXTERNAL_LIBS_DIR}) 
 include_directories(${EXTERNAL_LIBS_DIR}/stb) 
 include_directories(${EXTERNAL_LIBS_DIR}/glm) 
 
